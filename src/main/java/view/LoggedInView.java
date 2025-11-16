@@ -113,6 +113,9 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
      */
     public void actionPerformed(ActionEvent evt) {
         logoutController.execute();
+        if (logoutController != null) {
+            logoutController.execute();
+        }
     }
 
     @Override

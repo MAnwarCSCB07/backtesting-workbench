@@ -12,6 +12,7 @@ public class Main {
                 .addChartsView()
                 .addSignupUseCase()
                 .addLoginUseCase()
+                .addLogoutUseCase()
                 .addChangePasswordUseCase()
                 .build();
 
