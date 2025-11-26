@@ -15,7 +15,11 @@ public class BacktestConfig {
     private final String configName;
     private final List<Factor> selectedFactors;
     private final PreprocessingMethod preprocessingMethod;
-    private final Map<Factor, Double> linearWeights;
+    // Backtest parameters
+    private final String rebalanceFreq;
+    private final double transactionCost;
+    private final double positionCap;
+    private final Map<String, Double> factorWeights;
 
 
     /**
@@ -25,11 +29,18 @@ public class BacktestConfig {
      * @param configName          A user-friendly name for the configuration.
      * @param selectedFactors     A list of factors chosen for the backtest.
      * @param preprocessingMethod The preprocessing method to apply to factor scores.
-     * @param linearWeights       A map of factors to their corresponding linear weights.
-     * @throws IllegalArgumentException if id, configName, selectedFactors, or linearWeights are null or empty.
+     * @param rebalanceFreq       The rebalancing frequency (e.g., "monthly", "weekly").
+     * @param transactionCost     The transaction cost per trade (as a decimal, e.g., 0.001 for 10 bps).
+     * @param positionCap         The maximum position size per asset (as a decimal between 0 and 1).
+     * @param factorWeights       A map of factor names to their corresponding weights.
+     * @throws IllegalArgumentException if required fields are null/empty or values out of range.
      */
     public BacktestConfig(String id, String configName, List<Factor> selectedFactors,
-                          PreprocessingMethod preprocessingMethod, Map<Factor, Double> linearWeights) {
+                          PreprocessingMethod preprocessingMethod,
+                          String rebalanceFreq,
+                          double transactionCost,
+                          double positionCap,
+                          Map<String, Double> factorWeights) {
         if (id == null || id.trim().isEmpty()) {
             throw new IllegalArgumentException("ID cannot be null or empty.");
         }
@@ -39,15 +50,27 @@ public class BacktestConfig {
         if (selectedFactors == null || selectedFactors.isEmpty()) {
             throw new IllegalArgumentException("Selected factors cannot be null or empty.");
         }
-        if (linearWeights == null || linearWeights.isEmpty()) {
-            throw new IllegalArgumentException("Linear weights cannot be null or empty.");
+        if (rebalanceFreq == null || rebalanceFreq.trim().isEmpty()) {
+            throw new IllegalArgumentException("Rebalance frequency cannot be null or empty.");
+        }
+        if (transactionCost < 0) {
+            throw new IllegalArgumentException("Transaction cost cannot be negative.");
+        }
+        if (positionCap <= 0 || positionCap > 1) {
+            throw new IllegalArgumentException("Position cap must be in the range (0, 1].");
+        }
+        if (factorWeights == null || factorWeights.isEmpty()) {
+            throw new IllegalArgumentException("Factor weights cannot be null or empty.");
         }
 
         this.id = id;
         this.configName = configName;
         this.selectedFactors = selectedFactors;
         this.preprocessingMethod = preprocessingMethod;
-        this.linearWeights = linearWeights;
+        this.rebalanceFreq = rebalanceFreq;
+        this.transactionCost = transactionCost;
+        this.positionCap = positionCap;
+        this.factorWeights = factorWeights;
     }
 
     public String getId() {
@@ -66,9 +89,13 @@ public class BacktestConfig {
         return preprocessingMethod;
     }
 
-    public Map<Factor, Double> getLinearWeights() {
-        return linearWeights;
-    }
+    public String getRebalanceFreq() { return rebalanceFreq; }
+
+    public double getTransactionCost() { return transactionCost; }
+
+    public double getPositionCap() { return positionCap; }
+
+    public Map<String, Double> getFactorWeights() { return factorWeights; }
 
     /**
      * Enum for available factors for backtesting.
