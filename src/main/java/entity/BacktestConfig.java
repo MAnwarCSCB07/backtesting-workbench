@@ -1,13 +1,14 @@
-
 package entity;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Represents the configuration for a backtest, including selected factors,
- * preprocessing steps, and linear weights.
+ * Represents the configuration for a backtest.
+ * Defines which factors define the strategy and how important each factor is (weights).
  */
 public class BacktestConfig {
 
@@ -15,64 +16,96 @@ public class BacktestConfig {
     private final String configName;
     private final List<Factor> selectedFactors;
     private final PreprocessingMethod preprocessingMethod;
+
     // Backtest parameters
     private final String rebalanceFreq;
     private final double transactionCost;
     private final double positionCap;
-    private final Map<String, Double> factorWeights;
 
+    // How much weight to give each factor across the board
+    private final Map<Factor, Double> factorWeights;
 
     /**
      * Creates a new BacktestConfig.
-     *
-     * @param id                  A unique identifier for the backtest configuration.
-     * @param configName          A user-friendly name for the configuration.
-     * @param selectedFactors     A list of factors chosen for the backtest.
-     * @param preprocessingMethod The preprocessing method to apply to factor scores.
-     * @param rebalanceFreq       The rebalancing frequency (e.g., "monthly", "weekly").
-     * @param transactionCost     The transaction cost per trade (as a decimal, e.g., 0.001 for 10 bps).
-     * @param positionCap         The maximum position size per asset (as a decimal between 0 and 1).
-     * @param factorWeights       A map of factor names to their corresponding weights.
-     * @throws IllegalArgumentException if required fields are null/empty or values out of range.
      */
-    public BacktestConfig(String id, String configName, List<Factor> selectedFactors,
+    public BacktestConfig(String id,
+                          String configName,
+                          List<Factor> selectedFactors,
                           PreprocessingMethod preprocessingMethod,
                           String rebalanceFreq,
                           double transactionCost,
                           double positionCap,
-                          Map<String, Double> factorWeights) {
-        if (id == null || id.trim().isEmpty()) {
-            throw new IllegalArgumentException("ID cannot be null or empty.");
-        }
-        if (configName == null || configName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Config name cannot be null or empty.");
-        }
-        if (selectedFactors == null || selectedFactors.isEmpty()) {
-            throw new IllegalArgumentException("Selected factors cannot be null or empty.");
-        }
-        if (rebalanceFreq == null || rebalanceFreq.trim().isEmpty()) {
-            throw new IllegalArgumentException("Rebalance frequency cannot be null or empty.");
-        }
-        if (transactionCost < 0) {
-            throw new IllegalArgumentException("Transaction cost cannot be negative.");
-        }
-        if (positionCap <= 0 || positionCap > 1) {
-            throw new IllegalArgumentException("Position cap must be in the range (0, 1].");
-        }
-        if (factorWeights == null || factorWeights.isEmpty()) {
-            throw new IllegalArgumentException("Factor weights cannot be null or empty.");
-        }
+                          Map<Factor, Double> factorWeights) {
+
+        validateInputs(id, configName, selectedFactors, rebalanceFreq, transactionCost, positionCap, factorWeights);
 
         this.id = id;
         this.configName = configName;
-        this.selectedFactors = selectedFactors;
+        // Create an unmodifiable copy to prevent external mutation
+        this.selectedFactors = List.copyOf(selectedFactors);
         this.preprocessingMethod = preprocessingMethod;
         this.rebalanceFreq = rebalanceFreq;
         this.transactionCost = transactionCost;
         this.positionCap = positionCap;
-        this.factorWeights = factorWeights;
+
+        // Defensive copy into an EnumMap for performance and type safety
+        this.factorWeights = Collections.unmodifiableMap(new EnumMap<>(factorWeights));
     }
 
+    private void validateInputs(String id, String configName, List<Factor> selectedFactors,
+                                String rebalanceFreq, double transactionCost, double positionCap,
+                                Map<Factor, Double> factorWeights) {
+        if (id == null || id.trim().isEmpty()) throw new IllegalArgumentException("ID cannot be empty.");
+        if (configName == null || configName.trim().isEmpty())
+            throw new IllegalArgumentException("Config name cannot be empty.");
+        if (selectedFactors == null || selectedFactors.isEmpty())
+            throw new IllegalArgumentException("Must select at least one factor.");
+        if (factorWeights == null || factorWeights.isEmpty())
+            throw new IllegalArgumentException("Factor weights cannot be empty.");
+        if (transactionCost < 0) throw new IllegalArgumentException("Transaction cost cannot be negative.");
+        if (positionCap <= 0 || positionCap > 1)
+            throw new IllegalArgumentException("Position cap must be between 0 and 1.");
+
+        // Logical check: Ensure every selected factor has a weight
+        for (Factor f : selectedFactors) {
+            if (!factorWeights.containsKey(f)) {
+                throw new IllegalArgumentException("Missing weight for selected factor: " + f);
+            }
+        }
+    }
+
+    /**
+     * Calculates the composite score for a specific symbol based on this Config's weights.
+     * * Formula: Sum(Weight * Score)
+     *
+     * @param symbol    The ticker symbol (e.g., "AAPL")
+     * @param rawScores The raw values for this specific stock (e.g., Momentum=1.2)
+     * @return A specific FactorScore object containing the result.
+     */
+    public FactorScore calculateCompositeScore(String symbol, Map<Factor, Double> rawScores) {
+        if (rawScores == null || rawScores.isEmpty()) {
+            throw new IllegalArgumentException("Cannot calculate composite: raw scores are empty.");
+        }
+
+        double composite = 0.0;
+
+        // Iterate only through the factors defined in THIS configuration (The Weights)
+        // If the stock has extra data we don't care about, ignore it.
+        // If the stock is missing data we need, treat it as 0.0 (or handle as an error).
+        for (Map.Entry<Factor, Double> entry : factorWeights.entrySet()) {
+            Factor factor = entry.getKey();
+            double weight = entry.getValue();
+
+            // Get the score for this factor, default to 0.0 if data is missing for this stock
+            double score = rawScores.getOrDefault(factor, 0.0);
+
+            composite += (weight * score);
+        }
+
+        return new FactorScore(symbol, rawScores, composite);
+    }
+
+    // Getters
     public String getId() {
         return id;
     }
@@ -89,17 +122,24 @@ public class BacktestConfig {
         return preprocessingMethod;
     }
 
-    public String getRebalanceFreq() { return rebalanceFreq; }
+    public String getRebalanceFreq() {
+        return rebalanceFreq;
+    }
 
-    public double getTransactionCost() { return transactionCost; }
+    public double getTransactionCost() {
+        return transactionCost;
+    }
 
-    public double getPositionCap() { return positionCap; }
+    public double getPositionCap() {
+        return positionCap;
+    }
 
-    public Map<String, Double> getFactorWeights() { return factorWeights; }
+    public Map<Factor, Double> getFactorWeights() {
+        return factorWeights;
+    }
 
-    /**
-     * Enum for available factors for backtesting.
-     */
+    // Enums
+
     public enum Factor implements Serializable {
         MOMENTUM_12_1,
         REVERSAL_1_1,
@@ -108,9 +148,6 @@ public class BacktestConfig {
         LOW_VOL
     }
 
-    /**
-     * Enum for available preprocessing methods.
-     */
     public enum PreprocessingMethod {
         WINSORIZE,
         Z_SCORE,
