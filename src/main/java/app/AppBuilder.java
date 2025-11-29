@@ -54,6 +54,9 @@ public class AppBuilder {
     private LoggedInView loggedInView;
     private LoginView loginView;
     private ChartsView chartsView;
+    private AlphaVantageView alphaVantageView;
+    private InputStockDataView inputStockDataView;
+    private ConfigureFactorsView configureFactorsView;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -83,6 +86,24 @@ public class AppBuilder {
     public AppBuilder addChartsView() {
         chartsView = new ChartsView();
         cardPanel.add(chartsView, chartsView.viewName);
+        return this;
+    }
+
+    public AppBuilder addAlphaVantageView() {
+        alphaVantageView = new AlphaVantageView(viewManagerModel);
+        cardPanel.add(alphaVantageView, alphaVantageView.viewName);
+        return this;
+    }
+
+    public AppBuilder addInputStockDataView() {
+        inputStockDataView = new InputStockDataView(viewManagerModel);
+        cardPanel.add(inputStockDataView, inputStockDataView.viewName);
+        return this;
+    }
+
+    public AppBuilder addConfigureFactorsView() {
+        configureFactorsView = new ConfigureFactorsView(viewManagerModel);
+        cardPanel.add(configureFactorsView, configureFactorsView.viewName);
         return this;
     }
 

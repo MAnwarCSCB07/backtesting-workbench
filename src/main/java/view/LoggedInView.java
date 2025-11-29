@@ -7,8 +7,6 @@ import interface_adapter.logged_in.LoggedInViewModel;
 import interface_adapter.logout.LogoutController;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -24,87 +22,50 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private ChangePasswordController changePasswordController = null;
     private LogoutController logoutController;
 
-    private final JLabel username;
-
-    private final JTextField passwordInputField = new JTextField(15);
+    private final JLabel usernameLabel;
 
     public LoggedInView(LoggedInViewModel loggedInViewModel, ViewManagerModel viewManagerModel) {
         loggedInViewModel.addPropertyChangeListener(this);
 
-        final JLabel title = new JLabel("Logged In Screen");
-        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        this.setBackground(Color.WHITE);
 
-        final LabelTextPanel passwordInfo = new LabelTextPanel(
-                new JLabel("Password"), passwordInputField);
+        // Username centered
+        usernameLabel = new JLabel("user: ");
+        usernameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.add(Box.createVerticalStrut(20));
+        this.add(usernameLabel);
 
-        final JLabel usernameInfo = new JLabel("Currently logged in: ");
-        username = new JLabel();
+        // Top margin before buttons
+        this.add(Box.createVerticalStrut(40));
 
-        final JPanel buttons = new JPanel();
-        JButton logOut = new JButton("Log Out");
-        buttons.add(logOut);
+        // Alpha Vantage button
+        JButton alphaButton = new JButton("Alpha Vantage");
+        alphaButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.add(alphaButton);
 
-        JButton changePassword = new JButton("Change Password");
-        buttons.add(changePassword);
+        // Separator line
+        this.add(Box.createVerticalStrut(10));
+        JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
+        separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+        this.add(separator);
+        this.add(Box.createVerticalStrut(10));
 
-        JButton charts = new JButton("Charts");
-        buttons.add(charts);
+        // Input Stock Data button
+        JButton inputCsvButton = new JButton("Input Stock Data (CSV)");
+        inputCsvButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.add(inputCsvButton);
 
-        logOut.addActionListener(this);
-
-        charts.addActionListener(e -> {
-            viewManagerModel.setState("charts");
+        // Wire navigation
+        alphaButton.addActionListener(e -> {
+            viewManagerModel.setState("alpha vantage");
             viewManagerModel.firePropertyChange();
         });
 
-        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-        passwordInputField.getDocument().addDocumentListener(new DocumentListener() {
-
-            private void documentListenerHelper() {
-                final LoggedInState currentState = loggedInViewModel.getState();
-                currentState.setPassword(passwordInputField.getText());
-                loggedInViewModel.setState(currentState);
-            }
-
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                documentListenerHelper();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                documentListenerHelper();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                documentListenerHelper();
-            }
+        inputCsvButton.addActionListener(e -> {
+            viewManagerModel.setState("input stock data");
+            viewManagerModel.firePropertyChange();
         });
-
-        changePassword.addActionListener(
-                // This creates an anonymous subclass of ActionListener and instantiates it.
-                evt -> {
-                    if (evt.getSource().equals(changePassword)) {
-                        final LoggedInState currentState = loggedInViewModel.getState();
-
-                        this.changePasswordController.execute(
-                                currentState.getUsername(),
-                                currentState.getPassword()
-                        );
-                    }
-                }
-        );
-
-        this.add(title);
-        this.add(usernameInfo);
-        this.add(username);
-
-        this.add(passwordInfo);
-        JLabel passwordErrorField = new JLabel();
-        this.add(passwordErrorField);
-        this.add(buttons);
     }
 
     /**
@@ -122,17 +83,7 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals("state")) {
             final LoggedInState state = (LoggedInState) evt.getNewValue();
-            username.setText(state.getUsername());
-        }
-        else if (evt.getPropertyName().equals("password")) {
-            final LoggedInState state = (LoggedInState) evt.getNewValue();
-            if (state.getPasswordError() == null) {
-                JOptionPane.showMessageDialog(this, "password updated for " + state.getUsername());
-                passwordInputField.setText("");
-            }
-            else {
-                JOptionPane.showMessageDialog(this, state.getPasswordError());
-            }
+            usernameLabel.setText("user: " + state.getUsername());
         }
 
     }
