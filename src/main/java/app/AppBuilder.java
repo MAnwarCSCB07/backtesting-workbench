@@ -5,7 +5,7 @@ import data_access.BacktestDataAccessInterface;
 import data_access.InMemoryBacktestDataAccessObject;
 
 import entity.UserFactory;
-
+import data_access.AlphaVantageBacktestDataAccessObject;
 import interface_adapter.ViewManagerModel;
 
 import interface_adapter.logged_in.ChangePasswordController;
@@ -198,7 +198,7 @@ public class AppBuilder {
 
     public AppBuilder addRunBacktestUseCase() {
         final BacktestDataAccessInterface backtestDAO =
-                new InMemoryBacktestDataAccessObject();
+                new AlphaVantageBacktestDataAccessObject("XRI7X6PMTUFWUH1E");
 
         final RunBacktestOutputBoundary outputBoundary =
                 new RunBacktestPresenter(runBacktestViewModel);
