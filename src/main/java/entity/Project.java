@@ -26,7 +26,7 @@ public class Project {
 
 
         if (name.length() == 0) {
-            throw new IllegalArgumentException("Username cannot be empty");
+            throw new IllegalArgumentException("Project name cannot be empty");
         }
         if (id.length() == 0) {
             throw new IllegalArgumentException("ID cannot be empty");
