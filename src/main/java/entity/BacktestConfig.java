@@ -1,6 +1,7 @@
 package entity;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.Map;
  */
 public class BacktestConfig {
 
-    private final String id;
+    private final String projectId;
     private final String configName;
     private final List<Factor> selectedFactors;
     private final PreprocessingMethod preprocessingMethod;
@@ -25,10 +26,16 @@ public class BacktestConfig {
     // How much weight to give each factor across the board
     private final Map<Factor, Double> factorWeights;
 
+    // Note: project identifier is exposed via getProjectId().
+    private final LocalDate startDate;
+    private final LocalDate endDate;
+    private final double initialCapital;
+    private final String strategyName;
+
     /**
      * Creates a new BacktestConfig.
      */
-    public BacktestConfig(String id,
+    public BacktestConfig(String projectId,
                           String configName,
                           List<Factor> selectedFactors,
                           PreprocessingMethod preprocessingMethod,
@@ -37,9 +44,9 @@ public class BacktestConfig {
                           double positionCap,
                           Map<Factor, Double> factorWeights) {
 
-        validateInputs(id, configName, selectedFactors, rebalanceFreq, transactionCost, positionCap, factorWeights);
+        validateInputs(projectId, configName, selectedFactors, rebalanceFreq, transactionCost, positionCap, factorWeights);
 
-        this.id = id;
+        this.projectId = projectId;
         this.configName = configName;
         // Create an unmodifiable copy to prevent external mutation
         this.selectedFactors = List.copyOf(selectedFactors);
@@ -50,6 +57,52 @@ public class BacktestConfig {
 
         // Defensive copy into an EnumMap for performance and type safety
         this.factorWeights = Collections.unmodifiableMap(new EnumMap<>(factorWeights));
+
+        // Defaults mapping to align with merged config when using existing constructor
+        this.strategyName = configName;
+        this.startDate = null;
+        this.endDate = null;
+        this.initialCapital = 0.0;
+    }
+
+    /**
+     * Overloaded constructor to support simplified backtest configuration as requested.
+     * This delegates to the primary constructor using sensible defaults for factor-related fields,
+     * while preserving the provided high-level backtest parameters.
+     */
+    public BacktestConfig(String projectId,
+                          LocalDate startDate,
+                          LocalDate endDate,
+                          double initialCapital,
+                          String strategyName) {
+        // Provide sensible defaults for missing fields in the simplified constructor
+        String id = projectId;
+        String configName = strategyName;
+        List<Factor> selectedFactors = List.of(Factor.MOMENTUM_12_1);
+        PreprocessingMethod preprocessing = PreprocessingMethod.NONE;
+        String rebalance = "MONTHLY";
+        double txCost = 0.0;
+        double posCap = 1.0;
+        Map<Factor, Double> weights = Map.of(Factor.MOMENTUM_12_1, 1.0);
+
+        // Validate using the primary validation logic
+        validateInputs(id, configName, selectedFactors, rebalance, txCost, posCap, weights);
+
+        // Assign core fields
+        this.projectId = id;
+        this.configName = configName;
+        this.selectedFactors = List.copyOf(selectedFactors);
+        this.preprocessingMethod = preprocessing;
+        this.rebalanceFreq = rebalance;
+        this.transactionCost = txCost;
+        this.positionCap = posCap;
+        this.factorWeights = Collections.unmodifiableMap(new EnumMap<>(weights));
+
+        // Assign merged fields (projectId is combined with projectId)
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.initialCapital = initialCapital;
+        this.strategyName = strategyName;
     }
 
     private void validateInputs(String id, String configName, List<Factor> selectedFactors,
@@ -106,9 +159,6 @@ public class BacktestConfig {
     }
 
     // Getters
-    public String getId() {
-        return id;
-    }
 
     public String getConfigName() {
         return configName;
@@ -136,6 +186,27 @@ public class BacktestConfig {
 
     public Map<Factor, Double> getFactorWeights() {
         return factorWeights;
+    }
+
+    // Getters for merged fields
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public double getInitialCapital() {
+        return initialCapital;
+    }
+
+    public String getStrategyName() {
+        return strategyName;
     }
 
     // Enums
