@@ -76,7 +76,7 @@ public class BacktestConfig {
 
     /**
      * Calculates the composite score for a specific symbol based on this Config's weights.
-     * * Formula: Sum(Weight * Score)
+     * Formula: Sum(Weight * Score)
      *
      * @param symbol    The ticker symbol (e.g., "AAPL")
      * @param rawScores The raw values for this specific stock (e.g., Momentum=1.2)

@@ -26,30 +26,35 @@ public class ConfigureFactorsView extends JPanel {
         PreprocessingOptionsPanel.setLayout(new BoxLayout(PreprocessingOptionsPanel, BoxLayout.Y_AXIS));
         PreprocessingOptionsPanel.setBorder(BorderFactory.createTitledBorder("Preprocessing Options"));
 
-        // Factor options checkboxes
-        JCheckBox momentumCheck = new JCheckBox("Momentum");
-        JCheckBox valueCheck = new JCheckBox("Value");
-        JCheckBox sizeCheck = new JCheckBox("Size");
-        JCheckBox qualityCheck = new JCheckBox("Quality");
-        JCheckBox volatilityCheck = new JCheckBox("Volatility");
+        // Mapping from UI label to backend enum value
+        java.util.LinkedHashMap<String, String> factorLabelToEnum = new java.util.LinkedHashMap<>();
+        factorLabelToEnum.put("Momentum", "MOMENTUM_12_1");
+        factorLabelToEnum.put("Value", "VALUE_PROXY");
+        factorLabelToEnum.put("Size", "SIZE");
+        factorLabelToEnum.put("Quality", "REVERSAL_1_1");
+        factorLabelToEnum.put("Volatility", "LOW_VOL");
 
-        // Add factor options
-        FactorOptionsPanel.add(momentumCheck);
-        FactorOptionsPanel.add(valueCheck);
-        FactorOptionsPanel.add(sizeCheck);
-        FactorOptionsPanel.add(qualityCheck);
-        FactorOptionsPanel.add(volatilityCheck);
+        // Store checkboxes for later retrieval
+        java.util.LinkedHashMap<String, JCheckBox> factorCheckBoxes = new java.util.LinkedHashMap<>();
+        for (String label : factorLabelToEnum.keySet()) {
+            JCheckBox checkBox = new JCheckBox(label);
+            factorCheckBoxes.put(label, checkBox);
+            FactorOptionsPanel.add(checkBox);
+        }
 
-        // Preprocessing options checkboxes
-        JCheckBox winsorizeCheck = new JCheckBox("Winsorize");
-        JCheckBox standardizeCheck = new JCheckBox("Standardize");
-        JCheckBox neutralizeCheck = new JCheckBox("Market Neutralize");
+        // Preprocessing options radio buttons (mutually exclusive)
+        JRadioButton winsorizeRadio = new JRadioButton("Winsorize");
+        JRadioButton zScoreRadio = new JRadioButton("Z-Score");
+        JRadioButton noneRadio = new JRadioButton("None");
+        ButtonGroup preprocessingGroup = new ButtonGroup();
+        preprocessingGroup.add(winsorizeRadio);
+        preprocessingGroup.add(zScoreRadio);
+        preprocessingGroup.add(noneRadio);
 
         // Add preprocessing options
-        PreprocessingOptionsPanel.add(winsorizeCheck);
-        PreprocessingOptionsPanel.add(standardizeCheck);
-        PreprocessingOptionsPanel.add(neutralizeCheck);
-
+        PreprocessingOptionsPanel.add(winsorizeRadio);
+        PreprocessingOptionsPanel.add(zScoreRadio);
+        PreprocessingOptionsPanel.add(noneRadio);
         // Add panels to main view
         this.add(FactorOptionsPanel);
         this.add(Box.createVerticalStrut(20));

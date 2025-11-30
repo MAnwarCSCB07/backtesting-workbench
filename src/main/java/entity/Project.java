@@ -2,7 +2,8 @@ package entity;
 
 
 /**
- * A simple entity representing a user. Users have a username and password.
+ * A simple entity representing a project.
+ * Projects have a name, an id, and a backtest configuration.
  */
 public class Project {
 
@@ -14,20 +15,20 @@ public class Project {
 
 
     /**
-     * Creates a new user with the given non-empty name and non-empty password.
+     * Creates a new project with the given non-empty name and non-empty id, and the specified backtest configuration.
      *
-     * @param name   the username
-     * @param id     //@param universe
+     * @param id     the unique identifier for the project
+     * @param name   the name of the project
      * @param config the backtest configuration
-     * @throws IllegalArgumentException if the password or name are empty
+     * @throws IllegalArgumentException if the name or id are empty
      */
     public Project(String id, String name,/* Universe universe,*/ BacktestConfig config) {
 
 
-        if ("".equals(name)) {
+        if (name.length() == 0) {
             throw new IllegalArgumentException("Username cannot be empty");
         }
-        if ("".equals(id)) {
+        if (id.length() == 0) {
             throw new IllegalArgumentException("ID cannot be empty");
         }
         this.id = id;
