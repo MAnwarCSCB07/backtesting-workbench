@@ -13,10 +13,12 @@ public class Main {
                 .addInputStockDataView()
                 .addConfigureFactorsView()
                 .addChartsView()
+                .addSaveExportView()
                 .addSignupUseCase()
                 .addLoginUseCase()
                 .addLogoutUseCase()
                 .addChangePasswordUseCase()
+                .addSaveExportUseCase()
                 .build();
 
         application.pack();

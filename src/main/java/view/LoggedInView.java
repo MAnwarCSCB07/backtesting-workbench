@@ -56,6 +56,18 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         inputCsvButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         this.add(inputCsvButton);
 
+        // Separator line
+        this.add(Box.createVerticalStrut(10));
+        JSeparator separator2 = new JSeparator(SwingConstants.HORIZONTAL);
+        separator2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+        this.add(separator2);
+        this.add(Box.createVerticalStrut(10));
+
+        // Save & Export button
+        JButton saveExportButton = new JButton("Save & Export");
+        saveExportButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.add(saveExportButton);
+
         // Wire navigation
         alphaButton.addActionListener(e -> {
             viewManagerModel.setState("alpha vantage");
@@ -64,6 +76,11 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
         inputCsvButton.addActionListener(e -> {
             viewManagerModel.setState("input stock data");
+            viewManagerModel.firePropertyChange();
+        });
+
+        saveExportButton.addActionListener(e -> {
+            viewManagerModel.setState("save export");
             viewManagerModel.firePropertyChange();
         });
     }

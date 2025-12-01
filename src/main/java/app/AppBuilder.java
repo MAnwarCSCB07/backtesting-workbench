@@ -3,6 +3,10 @@ package app;
 import data_access.FileExportGatewayImpl;
 import data_access.FileProjectRepository;
 import data_access.FileUserDataAccessObject;
+import entity.BacktestConfig;
+import entity.BacktestResult;
+import entity.Project;
+import entity.Universe;
 import entity.UserFactory;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.logged_in.ChangePasswordController;
@@ -29,7 +33,6 @@ import use_case.logout.LogoutInputBoundary;
 import use_case.logout.LogoutInteractor;
 import use_case.logout.LogoutOutputBoundary;
 import use_case.save_export.FileExportGateway;
-import use_case.save_export.ProjectRepository;
 import use_case.save_export.SaveExportInputBoundary;
 import use_case.save_export.SaveExportInteractor;
 import use_case.save_export.SaveExportOutputBoundary;
@@ -56,6 +59,9 @@ public class AppBuilder {
 
     // DAO version using a shared external database
     // final DBUserDataAccessObject userDataAccessObject = new DBUserDataAccessObject(userFactory);
+
+    // Shared project repository for Save/Export use case
+    final FileProjectRepository projectRepository = new FileProjectRepository();
 
     private SignupView signupView;
     private SignupViewModel signupViewModel;
@@ -181,8 +187,7 @@ public class AppBuilder {
      * @return this builder
      */
     public AppBuilder addSaveExportUseCase() {
-        // Create repository and gateway implementations
-        final ProjectRepository projectRepository = new FileProjectRepository();
+        // Use shared repository instance and create gateway implementation
         final FileExportGateway fileExportGateway = new FileExportGatewayImpl();
 
         // Create presenter
@@ -195,7 +200,48 @@ public class AppBuilder {
         // Create controller and wire to view
         final SaveExportController saveExportController = new SaveExportController(saveExportInteractor);
         saveExportView.setSaveExportController(saveExportController);
+
+        // Create a test project for demonstration purposes
+        // TODO: Remove this when UC-2 and UC-3 create projects
+        createTestProject();
+
         return this;
+    }
+
+    /**
+     * Creates a test project for demonstration purposes.
+     * This should be replaced when UC-2 and UC-3 are integrated.
+     */
+    private void createTestProject() {
+        // Create a sample universe
+        java.util.List<String> tickers = java.util.Arrays.asList("AAPL", "GOOGL", "MSFT", "AMZN", "TSLA");
+        Universe universe = new Universe(tickers);
+
+        // Create sample factor weights
+        java.util.Map<String, Double> factorWeights = new java.util.HashMap<>();
+        factorWeights.put("momentum", 0.4);
+        factorWeights.put("value", 0.3);
+        factorWeights.put("low_vol", 0.2);
+        factorWeights.put("quality", 0.1);
+        BacktestConfig config = new BacktestConfig("monthly", 10.0, 0.1, factorWeights);
+
+        // Create sample backtest results
+        java.util.Map<String, Double> metrics = new java.util.HashMap<>();
+        metrics.put("Sharpe Ratio", 1.52);
+        metrics.put("CAGR", 0.125);
+        metrics.put("Max Drawdown", -0.18);
+        metrics.put("Win Rate", 0.58);
+        java.util.List<Double> equityCurve = java.util.Arrays.asList(
+            100.0, 102.5, 105.0, 103.0, 108.0, 110.0, 107.0, 112.0, 115.0, 113.0
+        );
+        java.util.List<Double> drawdown = java.util.Arrays.asList(
+            0.0, -0.02, -0.05, -0.07, -0.10, -0.12, -0.15, -0.18, -0.15, -0.12
+        );
+        BacktestResult result = new BacktestResult(equityCurve, drawdown, metrics);
+
+        // Create and save the test project
+        Project testProject = new Project("demo-project-1", "Demo Backtest Project", universe, config, result);
+        projectRepository.save(testProject);
     }
 
     public JFrame build() {
