@@ -1,0 +1,58 @@
+@startuml UC2_ConfigureFactorsAndRank_Sequence
+actor User
+participant "FactorConfigController" as Controller <<interface_adapter>>
+participant "FactorConfigInteractor" as Interactor <<use_case>>
+participant "FactorCalculator (various)" as Calculator <<entity>>
+participant "FactorDataGateway" as Gateway <<entity>>
+participant "FactorConfigPresenter" as Presenter <<interface_adapter>>
+participant "FactorViewModel" as ViewModel <<interface_adapter>>
+
+== Main Flow ==
+User -> Controller: execute(symbols, selectedFactors, weights, preprocessing)
+Controller -> Interactor: execute(FactorConfigInputData)
+
+activate Interactor
+Interactor -> Interactor: Build map of calculators for selected factors
+loop for each selected Factor
+  Interactor -> Calculator: compute(symbols, dataGateway)
+  activate Calculator
+  Calculator -> Gateway: fetch raw metric(s)
+  Gateway --> Calculator: raw values per symbol
+  Calculator --> Interactor: raw factor scores per symbol
+  deactivate Calculator
+end
+
+alt preprocessing == Z_SCORE
+  Interactor -> Interactor: zScore(values) per factor
+else preprocessing == WINSORIZE
+  Interactor -> Interactor: winsorize(values, 5%-95%) per factor
+else preprocessing == NONE
+  Interactor -> Interactor: use raw values
+end
+
+Interactor -> Interactor: Combine per symbol by weighted average
+Interactor -> Interactor: Build sorted rows (desc by composite)
+Interactor --> Presenter: present(FactorConfigOutputData)
+
+deactivate Interactor
+
+activate Presenter
+Presenter -> ViewModel: map output rows to FactorViewState + firePropertyChange()
+Presenter --> Presenter: optionally update ViewManager (navigation)
+deactivate Presenter
+
+== Alternative Flows ==
+opt Unknown factor (no calculator present)
+  Interactor -> Interactor: log warning, skip factor
+end
+
+opt Missing factor inputs for a symbol
+  note over Calculator, Gateway
+    If Gateway returns no data or zeros
+    calculators may yield default/zero values.
+    Interactor will then combine with available factors.
+  end note
+  Interactor -> Interactor: treat missing as 0.0 or skip (per factor map)
+end
+
+@enduml
