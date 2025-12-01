@@ -19,12 +19,17 @@ import java.beans.PropertyChangeListener;
 public class LoggedInView extends JPanel implements ActionListener, PropertyChangeListener {
 
     public final String viewName = "logged in";
+
     private ChangePasswordController changePasswordController = null;
-    private LogoutController logoutController;
+    private LogoutController logoutController = null;
 
     private final JLabel usernameLabel;
 
+    // NEW: Run Backtest button reference
+    private final JButton runBacktestButton = new JButton("Run Backtest");
+
     public LoggedInView(LoggedInViewModel loggedInViewModel, ViewManagerModel viewManagerModel) {
+
         loggedInViewModel.addPropertyChangeListener(this);
 
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -36,25 +41,28 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         this.add(Box.createVerticalStrut(20));
         this.add(usernameLabel);
 
-        // Top margin before buttons
         this.add(Box.createVerticalStrut(40));
 
-        // Alpha Vantage button
         JButton alphaButton = new JButton("Alpha Vantage");
         alphaButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         this.add(alphaButton);
 
-        // Separator line
         this.add(Box.createVerticalStrut(10));
         JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
         separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
         this.add(separator);
         this.add(Box.createVerticalStrut(10));
 
-        // Input Stock Data button
         JButton inputCsvButton = new JButton("Input Stock Data (CSV)");
         inputCsvButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         this.add(inputCsvButton);
+
+        this.add(Box.createVerticalStrut(20));
+
+        runBacktestButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.add(runBacktestButton);
+
+        // --- Navigation Wiring ---
 
         // Separator line
         this.add(Box.createVerticalStrut(10));
@@ -79,6 +87,12 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
             viewManagerModel.firePropertyChange();
         });
 
+        // NEW: navigation to Run Backtest
+        runBacktestButton.addActionListener(e -> {
+            viewManagerModel.setState("run backtest");
+            viewManagerModel.firePropertyChange();
+        });
+
         saveExportButton.addActionListener(e -> {
             viewManagerModel.setState("save export");
             viewManagerModel.firePropertyChange();
@@ -86,11 +100,10 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     }
 
     /**
-     * React to a button click that results in evt.
-     * @param evt the ActionEvent to react to
+     * Handles logout button clicks (if logout button triggers this view).
      */
+    @Override
     public void actionPerformed(ActionEvent evt) {
-        logoutController.execute();
         if (logoutController != null) {
             logoutController.execute();
         }
@@ -98,11 +111,10 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getPropertyName().equals("state")) {
+        if ("state".equals(evt.getPropertyName())) {
             final LoggedInState state = (LoggedInState) evt.getNewValue();
             usernameLabel.setText("user: " + state.getUsername());
         }
-
     }
 
     public String getViewName() {

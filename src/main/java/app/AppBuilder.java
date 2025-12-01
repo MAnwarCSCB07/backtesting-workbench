@@ -7,28 +7,52 @@ import entity.BacktestConfig;
 import entity.BacktestResult;
 import entity.Project;
 import entity.Universe;
+import data_access.BacktestDataAccessInterface;
+import data_access.InMemoryBacktestDataAccessObject;
+
 import entity.UserFactory;
+import data_access.AlphaVantageBacktestDataAccessObject;
 import interface_adapter.ViewManagerModel;
+
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.ChangePasswordPresenter;
 import interface_adapter.logged_in.LoggedInViewModel;
+
 import interface_adapter.login.LoginController;
 import interface_adapter.login.LoginPresenter;
 import interface_adapter.login.LoginViewModel;
+
 import interface_adapter.logout.LogoutController;
 import interface_adapter.logout.LogoutPresenter;
 import interface_adapter.save_export.SaveExportController;
 import interface_adapter.save_export.SaveExportPresenter;
 import interface_adapter.save_export.SaveExportViewModel;
+
 import interface_adapter.signup.SignupController;
 import interface_adapter.signup.SignupPresenter;
 import interface_adapter.signup.SignupViewModel;
+
+import interface_adapter.run_backtest.RunBacktestController;
+import interface_adapter.run_backtest.RunBacktestPresenter;
+import interface_adapter.run_backtest.RunBacktestViewModel;
+
+import interface_adapter.factor_config.FactorConfigController;
+import interface_adapter.factor_config.FactorConfigPresenter;
+import interface_adapter.factor_config.FactorViewModel;
+import data_access.InMemoryFactorDataGateway;
+import data_access.AlphaVantageFactorDataGateway;
+import use_case.factor_config.FactorConfigInputBoundary;
+import use_case.factor_config.FactorConfigInteractor;
+import use_case.factor_config.FactorConfigOutputBoundary;
+
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
+
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
 import use_case.login.LoginOutputBoundary;
+
 import use_case.logout.LogoutInputBoundary;
 import use_case.logout.LogoutInteractor;
 import use_case.logout.LogoutOutputBoundary;
@@ -36,17 +60,26 @@ import use_case.save_export.FileExportGateway;
 import use_case.save_export.SaveExportInputBoundary;
 import use_case.save_export.SaveExportInteractor;
 import use_case.save_export.SaveExportOutputBoundary;
+
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
+
+import use_case.run_backtest.RunBacktestInputBoundary;
+import use_case.run_backtest.RunBacktestInteractor;
+import use_case.run_backtest.RunBacktestOutputBoundary;
+
 import view.*;
 
 import javax.swing.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.awt.*;
 
 public class AppBuilder {
     private final JPanel cardPanel = new JPanel();
     private final CardLayout cardLayout = new CardLayout();
+
     final UserFactory userFactory = new UserFactory();
     final ViewManagerModel viewManagerModel = new ViewManagerModel();
     ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerModel);
@@ -65,16 +98,24 @@ public class AppBuilder {
 
     private SignupView signupView;
     private SignupViewModel signupViewModel;
+
     private LoginViewModel loginViewModel;
     private LoggedInViewModel loggedInViewModel;
+
     private LoggedInView loggedInView;
     private LoginView loginView;
+
     private ChartsView chartsView;
     private AlphaVantageView alphaVantageView;
     private InputStockDataView inputStockDataView;
     private ConfigureFactorsView configureFactorsView;
     private SaveExportView saveExportView;
     private SaveExportViewModel saveExportViewModel;
+    private FactorResultsView factorResultsView;
+    private FactorViewModel factorViewModel;
+
+    private RunBacktestViewModel runBacktestViewModel;
+    private RunBacktestView runBacktestView;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -125,6 +166,20 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addRunBacktestView() {
+        runBacktestViewModel = new RunBacktestViewModel();
+        runBacktestView = new RunBacktestView(runBacktestViewModel);
+        cardPanel.add(runBacktestView, runBacktestView.getViewName());
+        return this;
+    }
+
+    public AppBuilder addFactorResultsView() {
+        factorViewModel = new FactorViewModel();
+        factorResultsView = new FactorResultsView(factorViewModel, viewManagerModel);
+        cardPanel.add(factorResultsView, factorResultsView.getViewName());
+        return this;
+    }
+
     public AppBuilder addSaveExportView() {
         saveExportViewModel = new SaveExportViewModel();
         saveExportView = new SaveExportView(saveExportViewModel);
@@ -133,8 +188,9 @@ public class AppBuilder {
     }
 
     public AppBuilder addSignupUseCase() {
-        final SignupOutputBoundary signupOutputBoundary = new SignupPresenter(viewManagerModel,
-                signupViewModel, loginViewModel);
+        final SignupOutputBoundary signupOutputBoundary = new SignupPresenter(
+                viewManagerModel, signupViewModel, loginViewModel);
+
         final SignupInputBoundary userSignupInteractor = new SignupInteractor(
                 userDataAccessObject, signupOutputBoundary, userFactory);
 
@@ -144,8 +200,9 @@ public class AppBuilder {
     }
 
     public AppBuilder addLoginUseCase() {
-        final LoginOutputBoundary loginOutputBoundary = new LoginPresenter(viewManagerModel,
-                loggedInViewModel, loginViewModel);
+        final LoginOutputBoundary loginOutputBoundary = new LoginPresenter(
+                viewManagerModel, loggedInViewModel, loginViewModel);
+
         final LoginInputBoundary loginInteractor = new LoginInteractor(
                 userDataAccessObject, loginOutputBoundary);
 
@@ -155,30 +212,68 @@ public class AppBuilder {
     }
 
     public AppBuilder addChangePasswordUseCase() {
-        final ChangePasswordOutputBoundary changePasswordOutputBoundary = new ChangePasswordPresenter(viewManagerModel,
-                loggedInViewModel);
+        final ChangePasswordOutputBoundary changePasswordOutputBoundary =
+                new ChangePasswordPresenter(viewManagerModel, loggedInViewModel);
 
         final ChangePasswordInputBoundary changePasswordInteractor =
                 new ChangePasswordInteractor(userDataAccessObject, changePasswordOutputBoundary, userFactory);
 
-        ChangePasswordController changePasswordController = new ChangePasswordController(changePasswordInteractor);
+        ChangePasswordController changePasswordController =
+                new ChangePasswordController(changePasswordInteractor);
+
         loggedInView.setChangePasswordController(changePasswordController);
+        return this;
+    }
+
+    public AppBuilder addFactorConfigUseCase() {
+        // Presenter updates the FactorViewModel and navigates to results view
+        final FactorConfigOutputBoundary presenter = new FactorConfigPresenter(factorViewModel, viewManagerModel);
+        // UC-2 Integration: hook factor calculators to Alpha Vantage data source
+        final String apiKey = "XRI7X6PMTUFWUH1E";
+        Logger.getLogger(AppBuilder.class.getName()).log(Level.INFO,
+                "[AppBuilder] Wiring UC-2 FactorConfig with AlphaVantageFactorDataGateway, apiKeyLen=" + (apiKey == null ? 0 : apiKey.length()));
+        final FactorConfigInputBoundary interactor = new FactorConfigInteractor(
+                presenter,
+                new AlphaVantageFactorDataGateway(apiKey)
+        );
+        final FactorConfigController controller = new FactorConfigController(interactor);
+        configureFactorsView.setFactorConfigController(controller);
         return this;
     }
 
     /**
      * Adds the Logout Use Case to the application.
+     *
+     *
      * @return this builder
      */
     public AppBuilder addLogoutUseCase() {
-        final LogoutOutputBoundary logoutOutputBoundary = new LogoutPresenter(viewManagerModel,
-                loggedInViewModel, loginViewModel);
+        final LogoutOutputBoundary logoutOutputBoundary = new LogoutPresenter(
+                viewManagerModel, loggedInViewModel, loginViewModel);
 
         final LogoutInputBoundary logoutInteractor =
                 new LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
 
         final LogoutController logoutController = new LogoutController(logoutInteractor);
         loggedInView.setLogoutController(logoutController);
+        return this;
+    }
+
+    public AppBuilder addRunBacktestUseCase() {
+        final BacktestDataAccessInterface backtestDAO =
+                new AlphaVantageBacktestDataAccessObject("XRI7X6PMTUFWUH1E");
+
+        final RunBacktestOutputBoundary outputBoundary =
+                new RunBacktestPresenter(runBacktestViewModel);
+
+        final RunBacktestInputBoundary interactor =
+                new RunBacktestInteractor(backtestDAO, outputBoundary);
+
+        final RunBacktestController controller =
+                new RunBacktestController(interactor);
+
+        runBacktestView.setRunBacktestController(controller);
+
         return this;
     }
 
@@ -255,6 +350,4 @@ public class AppBuilder {
 
         return application;
     }
-
-
 }
