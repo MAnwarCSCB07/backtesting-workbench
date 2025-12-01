@@ -2,9 +2,9 @@ package use_case.run_backtest;
 
 import data_access.BacktestDataAccessInterface;
 import entity.BacktestConfig;
-import entity.BacktestResult;
-import entity.PriceBar;
 import entity.Universe;
+import entity.PriceBar;
+import entity.BacktestResult;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -153,4 +153,5 @@ public class RunBacktestInteractorTest {
         assertFalse(out.getEquityCurve().isEmpty());
         assertTrue(out.getEquityCurve().size() >= 2);
     }
+
 }

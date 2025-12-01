@@ -34,7 +34,11 @@ public class RunBacktestPresenter implements RunBacktestOutputBoundary {
     @Override
     public void presentFailure(String errorMessage) {
         RunBacktestState state = viewModel.getState();
+
         state.setStatusMessage(errorMessage);
+        state.setEquityCurve(null);
+        state.setFinalValue(null);
+        state.setMaxDrawdown(null);
 
         viewModel.setState(state);
         viewModel.firePropertyChange();

@@ -12,7 +12,7 @@ import java.time.LocalDate;
 
 public class RunBacktestView extends JPanel implements PropertyChangeListener {
 
-    private RunBacktestController controller;              // set later by AppBuilder
+    private RunBacktestController controller;              // will be set later by AppBuilder
     private final RunBacktestViewModel viewModel;
 
     // Inputs
@@ -41,6 +41,8 @@ public class RunBacktestView extends JPanel implements PropertyChangeListener {
 
     public RunBacktestView(RunBacktestViewModel viewModel) {
         this.viewModel = viewModel;
+
+        // Listen for changes from the ViewModel
         this.viewModel.addPropertyChangeListener(this);
 
         setLayout(new BorderLayout());

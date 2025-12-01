@@ -1,10 +1,11 @@
 package use_case.run_backtest;
 
+import data_access.BacktestDataAccessInterface;
 import entity.BacktestConfig;
 import entity.BacktestResult;
 import entity.PriceBar;
 import entity.Universe;
-import data_access.BacktestDataAccessInterface;
+
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -30,6 +31,7 @@ public class RunBacktestInteractor implements RunBacktestInputBoundary {
     public void execute(RunBacktestInputData inputData) {
 
         String projectId = inputData.getProjectId();
+
         BacktestConfig config = backtestDAO.getConfig(projectId);
 
         if (config == null) {
@@ -94,6 +96,7 @@ public class RunBacktestInteractor implements RunBacktestInputBoundary {
         }
 
         double shares = initialCapital / firstClose;
+
         List<Double> equityCurve = new ArrayList<>();
         List<Double> dailyReturns = new ArrayList<>();
 

@@ -27,6 +27,14 @@ import interface_adapter.run_backtest.RunBacktestController;
 import interface_adapter.run_backtest.RunBacktestPresenter;
 import interface_adapter.run_backtest.RunBacktestViewModel;
 
+import interface_adapter.factor_config.FactorConfigController;
+import interface_adapter.factor_config.FactorConfigPresenter;
+import interface_adapter.factor_config.FactorViewModel;
+import data_access.InMemoryFactorDataGateway;
+import use_case.factor_config.FactorConfigInputBoundary;
+import use_case.factor_config.FactorConfigInteractor;
+import use_case.factor_config.FactorConfigOutputBoundary;
+
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
 import use_case.change_password.ChangePasswordOutputBoundary;
@@ -82,6 +90,8 @@ public class AppBuilder {
     private AlphaVantageView alphaVantageView;
     private InputStockDataView inputStockDataView;
     private ConfigureFactorsView configureFactorsView;
+    private FactorResultsView factorResultsView;
+    private FactorViewModel factorViewModel;
 
     private RunBacktestViewModel runBacktestViewModel;
     private RunBacktestView runBacktestView;
@@ -142,6 +152,13 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addFactorResultsView() {
+        factorViewModel = new FactorViewModel();
+        factorResultsView = new FactorResultsView(factorViewModel, viewManagerModel);
+        cardPanel.add(factorResultsView, factorResultsView.getViewName());
+        return this;
+    }
+
     public AppBuilder addSignupUseCase() {
         final SignupOutputBoundary signupOutputBoundary = new SignupPresenter(
                 viewManagerModel, signupViewModel, loginViewModel);
@@ -180,8 +197,19 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addFactorConfigUseCase() {
+        // Presenter updates the FactorViewModel and navigates to results view
+        final FactorConfigOutputBoundary presenter = new FactorConfigPresenter(factorViewModel, viewManagerModel);
+        final FactorConfigInputBoundary interactor = new FactorConfigInteractor(presenter, new InMemoryFactorDataGateway());
+        final FactorConfigController controller = new FactorConfigController(interactor);
+        configureFactorsView.setFactorConfigController(controller);
+        return this;
+    }
+
     /**
      * Adds the Logout Use Case to the application.
+     *
+     *
      * @return this builder
      */
     public AppBuilder addLogoutUseCase() {

@@ -35,6 +35,10 @@ public class RunBacktestOutputData {
         this.equityCurve = equityCurve;
     }
 
+    public String getProjectId() {
+        return projectId;
+    }
+
     public double getFinalValue() {
         return finalValue;
     }
