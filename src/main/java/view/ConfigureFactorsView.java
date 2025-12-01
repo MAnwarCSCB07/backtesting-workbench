@@ -19,6 +19,16 @@ public class ConfigureFactorsView extends JPanel {
 
         this.add(Box.createVerticalStrut(40));
 
+        JButton saveExportButton = new JButton("Save & Export");
+        saveExportButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        saveExportButton.addActionListener(e -> {
+            viewManagerModel.setState("save export");
+            viewManagerModel.firePropertyChange();
+        });
+        this.add(saveExportButton);
+
+        this.add(Box.createVerticalStrut(20));
+
         JButton back = new JButton("Return");
         back.setAlignmentX(Component.CENTER_ALIGNMENT);
         back.addActionListener(e -> {

@@ -1,5 +1,7 @@
 package app;
 
+import data_access.FileExportGatewayImpl;
+import data_access.FileProjectRepository;
 import data_access.FileUserDataAccessObject;
 import entity.UserFactory;
 import interface_adapter.ViewManagerModel;
@@ -11,6 +13,9 @@ import interface_adapter.login.LoginPresenter;
 import interface_adapter.login.LoginViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.logout.LogoutPresenter;
+import interface_adapter.save_export.SaveExportController;
+import interface_adapter.save_export.SaveExportPresenter;
+import interface_adapter.save_export.SaveExportViewModel;
 import interface_adapter.signup.SignupController;
 import interface_adapter.signup.SignupPresenter;
 import interface_adapter.signup.SignupViewModel;
@@ -23,6 +28,11 @@ import use_case.login.LoginOutputBoundary;
 import use_case.logout.LogoutInputBoundary;
 import use_case.logout.LogoutInteractor;
 import use_case.logout.LogoutOutputBoundary;
+import use_case.save_export.FileExportGateway;
+import use_case.save_export.ProjectRepository;
+import use_case.save_export.SaveExportInputBoundary;
+import use_case.save_export.SaveExportInteractor;
+import use_case.save_export.SaveExportOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
@@ -57,6 +67,8 @@ public class AppBuilder {
     private AlphaVantageView alphaVantageView;
     private InputStockDataView inputStockDataView;
     private ConfigureFactorsView configureFactorsView;
+    private SaveExportView saveExportView;
+    private SaveExportViewModel saveExportViewModel;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -107,6 +119,13 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addSaveExportView() {
+        saveExportViewModel = new SaveExportViewModel();
+        saveExportView = new SaveExportView(saveExportViewModel);
+        cardPanel.add(saveExportView, saveExportView.getViewName());
+        return this;
+    }
+
     public AppBuilder addSignupUseCase() {
         final SignupOutputBoundary signupOutputBoundary = new SignupPresenter(viewManagerModel,
                 signupViewModel, loginViewModel);
@@ -154,6 +173,28 @@ public class AppBuilder {
 
         final LogoutController logoutController = new LogoutController(logoutInteractor);
         loggedInView.setLogoutController(logoutController);
+        return this;
+    }
+
+    /**
+     * Adds the Save/Export Use Case to the application.
+     * @return this builder
+     */
+    public AppBuilder addSaveExportUseCase() {
+        // Create repository and gateway implementations
+        final ProjectRepository projectRepository = new FileProjectRepository();
+        final FileExportGateway fileExportGateway = new FileExportGatewayImpl();
+
+        // Create presenter
+        final SaveExportOutputBoundary saveExportOutputBoundary = new SaveExportPresenter(saveExportViewModel);
+
+        // Create interactor
+        final SaveExportInputBoundary saveExportInteractor =
+                new SaveExportInteractor(projectRepository, fileExportGateway, saveExportOutputBoundary);
+
+        // Create controller and wire to view
+        final SaveExportController saveExportController = new SaveExportController(saveExportInteractor);
+        saveExportView.setSaveExportController(saveExportController);
         return this;
     }
 
