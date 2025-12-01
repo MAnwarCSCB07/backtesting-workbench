@@ -20,7 +20,7 @@ public class FileProjectRepository implements ProjectRepository {
 
     @Override
     public void save(Project project) {
-        projects.put(project.getProjectId(), project);
+        projects.put(project.getId(), project);
     }
 
     @Override
