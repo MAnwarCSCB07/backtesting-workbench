@@ -1,23 +1,24 @@
 package entity;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Entity representing the results of a backtest.
- * Contains equity curve, drawdown series, and performance metrics.
+ * Results from running a backtest, including equity curve, drawdown series,
+ * and performance metrics.
  */
 public class BacktestResult {
-    private final List<Double> equityCurve; // Portfolio value over time
-    private final List<Double> drawdown; // Drawdown series
-    private final Map<String, Double> metrics; // Performance metrics (Sharpe ratio, CAGR, etc.)
+    private final List<Double> equityCurve;
+    private final List<Double> drawdown;
+    private final Map<String, Double> metrics;
 
     /**
-     * Creates a BacktestResult with the given data.
-     * @param equityCurve list of portfolio values over time
-     * @param drawdown list of drawdown values over time
-     * @param metrics map of metric names to their values
-     * @throws IllegalArgumentException if equityCurve or drawdown are null
+     * Creates a new BacktestResult.
+     * @param equityCurve the equity curve over time
+     * @param drawdown the drawdown series over time
+     * @param metrics a map of metric names to their values (e.g., "Sharpe Ratio", "CAGR", "Max Drawdown")
      */
     public BacktestResult(List<Double> equityCurve, List<Double> drawdown, Map<String, Double> metrics) {
         if (equityCurve == null) {
@@ -26,21 +27,45 @@ public class BacktestResult {
         if (drawdown == null) {
             throw new IllegalArgumentException("Drawdown cannot be null");
         }
-        this.equityCurve = equityCurve;
-        this.drawdown = drawdown;
-        this.metrics = metrics;
+        if (metrics == null) {
+            throw new IllegalArgumentException("Metrics cannot be null");
+        }
+        this.equityCurve = new ArrayList<>(equityCurve); // Defensive copy
+        this.drawdown = new ArrayList<>(drawdown); // Defensive copy
+        this.metrics = new HashMap<>(metrics); // Defensive copy
     }
 
+    /**
+     * Returns a copy of the equity curve.
+     * @return the equity curve as a list of values
+     */
     public List<Double> getEquityCurve() {
-        return equityCurve;
+        return new ArrayList<>(equityCurve);
     }
 
+    /**
+     * Returns a copy of the drawdown series.
+     * @return the drawdown series as a list of values
+     */
     public List<Double> getDrawdown() {
-        return drawdown;
+        return new ArrayList<>(drawdown);
     }
 
+    /**
+     * Returns a copy of the metrics map.
+     * @return a map of metric names to values
+     */
     public Map<String, Double> getMetrics() {
-        return metrics;
+        return new HashMap<>(metrics);
+    }
+
+    /**
+     * Gets a specific metric value.
+     * @param metricName the name of the metric
+     * @return the metric value, or null if the metric doesn't exist
+     */
+    public Double getMetric(String metricName) {
+        return metrics.get(metricName);
     }
 }
 
