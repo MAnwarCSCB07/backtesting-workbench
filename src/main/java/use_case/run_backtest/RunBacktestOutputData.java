@@ -34,10 +34,7 @@ public class RunBacktestOutputData {
         this.worstDailyLossPercent = worstDailyLossPercent;
         this.equityCurve = equityCurve;
     }
-
-    public String getProjectId() {
-        return projectId;
-    }
+    
 
     public double getFinalValue() {
         return finalValue;
