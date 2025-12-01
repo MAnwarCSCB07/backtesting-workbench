@@ -1,6 +1,10 @@
 package entity;
 
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 
 import java.io.Serializable;
 
@@ -43,6 +47,8 @@ public class BacktestConfig {
     public String getStrategyName() {
         return strategyName;
     }
+
+    // Enums
 
     public enum Factor implements Serializable {
         MOMENTUM_12_1,
