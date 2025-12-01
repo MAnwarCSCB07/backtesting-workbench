@@ -199,6 +199,11 @@ public class AppBuilder {
     public AppBuilder addFactorConfigUseCase() {
         // Presenter updates the FactorViewModel and navigates to results view
         final FactorConfigOutputBoundary presenter = new FactorConfigPresenter(factorViewModel, viewManagerModel);
+        // TODO [UC-2 Integration]: Replace InMemoryFactorDataGateway with a real AlphaVantage-backed implementation
+        //  - Create a class like AlphaVantageFactorDataGateway implements FactorDataGateway (in data_access package)
+        //  - It should fetch inputs required by entity-level calculators (e.g., momentum12m1, volatility)
+        //  - Inject API key/config as needed (do NOT hardcode here). Consider using env vars or a config provider.
+        //  - Then pass that implementation below instead of the in-memory stub.
         final FactorConfigInputBoundary interactor = new FactorConfigInteractor(presenter, new InMemoryFactorDataGateway());
         final FactorConfigController controller = new FactorConfigController(interactor);
         configureFactorsView.setFactorConfigController(controller);
