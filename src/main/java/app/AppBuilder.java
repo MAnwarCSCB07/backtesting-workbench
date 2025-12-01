@@ -26,6 +26,7 @@ import interface_adapter.factor_config.FactorConfigController;
 import interface_adapter.factor_config.FactorConfigPresenter;
 import interface_adapter.factor_config.FactorViewModel;
 import data_access.InMemoryFactorDataGateway;
+import data_access.AlphaVantageFactorDataGateway;
 import use_case.factor_config.FactorConfigInputBoundary;
 import use_case.factor_config.FactorConfigInteractor;
 import use_case.factor_config.FactorConfigOutputBoundary;
@@ -57,6 +58,8 @@ import use_case.run_backtest.RunBacktestOutputBoundary;
 import view.*;
 
 import javax.swing.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.awt.*;
 
 public class AppBuilder {
@@ -199,12 +202,14 @@ public class AppBuilder {
     public AppBuilder addFactorConfigUseCase() {
         // Presenter updates the FactorViewModel and navigates to results view
         final FactorConfigOutputBoundary presenter = new FactorConfigPresenter(factorViewModel, viewManagerModel);
-        // TODO [UC-2 Integration]: Replace InMemoryFactorDataGateway with a real AlphaVantage-backed implementation
-        //  - Create a class like AlphaVantageFactorDataGateway implements FactorDataGateway (in data_access package)
-        //  - It should fetch inputs required by entity-level calculators (e.g., momentum12m1, volatility)
-        //  - Inject API key/config as needed (do NOT hardcode here). Consider using env vars or a config provider.
-        //  - Then pass that implementation below instead of the in-memory stub.
-        final FactorConfigInputBoundary interactor = new FactorConfigInteractor(presenter, new InMemoryFactorDataGateway());
+        // UC-2 Integration: hook factor calculators to Alpha Vantage data source
+        final String apiKey = "XRI7X6PMTUFWUH1E";
+        Logger.getLogger(AppBuilder.class.getName()).log(Level.INFO,
+                "[AppBuilder] Wiring UC-2 FactorConfig with AlphaVantageFactorDataGateway, apiKeyLen=" + (apiKey == null ? 0 : apiKey.length()));
+        final FactorConfigInputBoundary interactor = new FactorConfigInteractor(
+                presenter,
+                new AlphaVantageFactorDataGateway(apiKey)
+        );
         final FactorConfigController controller = new FactorConfigController(interactor);
         configureFactorsView.setFactorConfigController(controller);
         return this;
