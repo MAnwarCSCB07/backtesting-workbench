@@ -8,3 +8,5 @@ project=demo-project, finalValue=11693.29, maxDrawdown=0.0542
 project=demo-project, finalValue=10364.24, maxDrawdown=0.0327
 project=demo-project, finalValue=10364.24, maxDrawdown=0.0327
 project=demo-project, finalValue=10326.25, maxDrawdown=0.0327
+project=demo-project, finalValue=10326.25, maxDrawdown=0.0327
+project=demo-project, finalValue=10326.25, maxDrawdown=0.0327
