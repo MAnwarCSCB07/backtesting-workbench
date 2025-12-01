@@ -6,6 +6,9 @@ import entity.factors.FactorCalculator;
 import entity.factors.FactorDataGateway;
 import entity.factors.LowVolFactor;
 import entity.factors.MomentumFactor;
+import entity.factors.ReversalFactor;
+import entity.factors.SizeFactor;
+import entity.factors.ValueProxyFactor;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -15,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Interactor for UC-2: Configure Factors & Rank.
@@ -24,6 +29,7 @@ public class FactorConfigInteractor implements FactorConfigInputBoundary {
     private final FactorConfigOutputBoundary presenter;
     private final FactorDataGateway dataGateway;
     private final Map<Factor, FactorCalculator> calculators;
+    private static final Logger LOG = Logger.getLogger(FactorConfigInteractor.class.getName());
 
     public FactorConfigInteractor(FactorConfigOutputBoundary presenter,
                                   FactorDataGateway dataGateway,
@@ -43,6 +49,9 @@ public class FactorConfigInteractor implements FactorConfigInputBoundary {
         this.calculators = new EnumMap<>(Factor.class);
         this.calculators.put(Factor.MOMENTUM_12_1, new MomentumFactor());
         this.calculators.put(Factor.LOW_VOL, new LowVolFactor());
+        this.calculators.put(Factor.REVERSAL_1_1, new ReversalFactor());
+        this.calculators.put(Factor.SIZE, new SizeFactor());
+        this.calculators.put(Factor.VALUE_PROXY, new ValueProxyFactor());
     }
 
     @Override
@@ -52,25 +61,40 @@ public class FactorConfigInteractor implements FactorConfigInputBoundary {
         final Map<Factor, Double> weights = inputData.getWeights();
         final PreprocessingMethod preprocessing = inputData.getPreprocessing();
 
+        LOG.log(Level.INFO, "[UC-2] Execute with symbols=" + symbols
+                + ", selectedFactors=" + selected
+                + ", weights=" + weights
+                + ", preprocessing=" + preprocessing);
+
         // 1) Compute raw per-factor scores
         Map<Factor, Map<String, Double>> rawByFactor = new EnumMap<>(Factor.class);
         for (Factor f : selected) {
             FactorCalculator calc = calculators.get(f);
             if (calc == null) {
                 // Skip unknown factors gracefully
+                LOG.log(Level.WARNING, "[UC-2] No calculator found for factor=" + f + ", skipping.");
                 continue;
             }
             Map<String, Double> scores = calc.compute(symbols, dataGateway);
+            LOG.log(Level.INFO, "[UC-2] Computed raw scores for " + f + ": entries=" + scores.size());
             rawByFactor.put(f, scores);
         }
 
-        // 2) Standardize per-factor if requested
+        // 2) Preprocess per-factor if requested
         Map<Factor, Map<String, Double>> usedByFactor = new EnumMap<>(Factor.class);
         for (Map.Entry<Factor, Map<String, Double>> e : rawByFactor.entrySet()) {
             Map<String, Double> values = e.getValue();
             Map<String, Double> processed;
             if (preprocessing == PreprocessingMethod.Z_SCORE) {
                 processed = zScore(values);
+                // quick stats
+                double mean = values.values().stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+                double variance = values.values().stream().mapToDouble(v -> (v - mean) * (v - mean)).average().orElse(0.0);
+                double std = Math.sqrt(variance);
+                LOG.log(Level.FINE, "[UC-2] Z-scored factor=" + e.getKey() + ", mean=" + mean + ", std=" + std);
+            } else if (preprocessing == PreprocessingMethod.WINSORIZE) {
+                processed = winsorize(values, 0.05, 0.95);
+                LOG.log(Level.FINE, "[UC-2] Winsorized factor=" + e.getKey());
             } else {
                 processed = values;
             }
@@ -111,6 +135,16 @@ public class FactorConfigInteractor implements FactorConfigInputBoundary {
                 .sorted(Comparator.comparingDouble((FactorConfigOutputData.Row r) -> r.composite).reversed())
                 .collect(Collectors.toList());
 
+        if (!rows.isEmpty()) {
+            int n = Math.min(5, rows.size());
+            String top = rows.subList(0, n).stream()
+                    .map(r -> r.symbol + ":" + String.format(java.util.Locale.US, "%.4f", r.composite))
+                    .collect(Collectors.joining(", "));
+            LOG.log(Level.INFO, "[UC-2] Ranked " + rows.size() + " symbols. Top " + n + " => " + top);
+        } else {
+            LOG.log(Level.INFO, "[UC-2] No rows produced in factor ranking (check inputs and data gateway).");
+        }
+
         presenter.present(new FactorConfigOutputData(rows));
     }
 
@@ -123,6 +157,36 @@ public class FactorConfigInteractor implements FactorConfigInputBoundary {
             for (Map.Entry<String, Double> e : values.entrySet()) out.put(e.getKey(), 0.0);
         } else {
             for (Map.Entry<String, Double> e : values.entrySet()) out.put(e.getKey(), (e.getValue() - mean) / std);
+        }
+        return out;
+    }
+
+    private static Map<String, Double> winsorize(Map<String, Double> values, double lowerProb, double upperProb) {
+        // Extract and sort values
+        List<Double> sorted = new ArrayList<>(values.values());
+        sorted.sort(Double::compareTo);
+        if (sorted.isEmpty()) return new HashMap<>();
+
+        // Clamp probabilities
+        lowerProb = Math.max(0.0, Math.min(lowerProb, 1.0));
+        upperProb = Math.max(0.0, Math.min(upperProb, 1.0));
+        if (upperProb < lowerProb) {
+            double tmp = lowerProb; lowerProb = upperProb; upperProb = tmp;
+        }
+
+        // Compute quantile indices (inclusive floor)
+        int n = sorted.size();
+        int li = (int) Math.floor(lowerProb * (n - 1));
+        int ui = (int) Math.floor(upperProb * (n - 1));
+        double lo = sorted.get(li);
+        double hi = sorted.get(ui);
+
+        Map<String, Double> out = new HashMap<>();
+        for (Map.Entry<String, Double> e : values.entrySet()) {
+            double v = e.getValue();
+            if (v < lo) v = lo;
+            if (v > hi) v = hi;
+            out.put(e.getKey(), v);
         }
         return out;
     }

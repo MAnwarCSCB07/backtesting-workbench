@@ -25,6 +25,8 @@ public class AlphaVantageFactorDataGateway implements FactorDataGateway {
 
     private final String apiKey;
     private final Map<String, NavigableMap<LocalDate, Double>> closeCache = new TreeMap<>();
+    private final Map<String, Long> marketCapCache = new TreeMap<>();
+    private final Map<String, Double> valueProxyCache = new TreeMap<>();
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.US);
     private static final Logger LOG = Logger.getLogger(AlphaVantageFactorDataGateway.class.getName());
 
@@ -102,6 +104,48 @@ public class AlphaVantageFactorDataGateway implements FactorDataGateway {
         return ann;
     }
 
+    @Override
+    public double size(String symbol) {
+        // Try cache first
+        if (marketCapCache.containsKey(symbol)) {
+            long mc = marketCapCache.get(symbol);
+            return mc > 0 ? (double) mc : 0.0;
+        }
+        JSONObject ov = fetchOverview(symbol);
+        if (ov == null) return 0.0;
+        try {
+            String s = ov.optString("MarketCapitalization", "");
+            if (s == null || s.isEmpty()) return 0.0;
+            long mc = Long.parseLong(s);
+            marketCapCache.put(symbol, mc);
+            return mc > 0 ? (double) mc : 0.0;
+        } catch (Exception e) {
+            LOG.log(Level.FINE, "[AlphaVantage][" + symbol + "] Failed to parse MarketCapitalization: " + e.getMessage());
+            return 0.0;
+        }
+    }
+
+    @Override
+    public double valueProxy(String symbol) {
+        if (valueProxyCache.containsKey(symbol)) return valueProxyCache.get(symbol);
+        JSONObject ov = fetchOverview(symbol);
+        if (ov == null) return 0.0;
+        // Prefer 1/PB if PB > 0, else 1/PE if PE > 0.
+        double proxy = 0.0;
+        try {
+            double pb = parseDoubleSafe(ov.optString("PriceToBookRatio", ""));
+            if (pb > 0) proxy = 1.0 / pb;
+        } catch (Exception ignored) {}
+        if (proxy == 0.0) {
+            try {
+                double pe = parseDoubleSafe(ov.optString("PERatio", ""));
+                if (pe > 0) proxy = 1.0 / pe;
+            } catch (Exception ignored) {}
+        }
+        valueProxyCache.put(symbol, proxy);
+        return proxy;
+    }
+
     // --- Helpers ---
 
     private List<Double> getAscendingCloses(String symbol) {
@@ -169,5 +213,30 @@ public class AlphaVantageFactorDataGateway implements FactorDataGateway {
 
     private static String encode(String s) {
         return s.replace(" ", "%20");
+    }
+
+    // ---- Fundamentals helpers ----
+    private JSONObject fetchOverview(String symbol) {
+        try {
+            String url = "https://www.alphavantage.co/query?function=OVERVIEW&symbol="
+                    + encode(symbol) + "&apikey=" + encode(apiKey);
+            String json = httpGet(url);
+            if (json == null || json.isEmpty()) return null;
+            return new JSONObject(json);
+        } catch (Exception e) {
+            LOG.log(Level.FINE, "[AlphaVantage][" + symbol + "] OVERVIEW fetch error: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private static double parseDoubleSafe(String s) {
+        if (s == null) return 0.0;
+        s = s.trim();
+        if (s.isEmpty() || s.equalsIgnoreCase("None")) return 0.0;
+        try {
+            return Double.parseDouble(s);
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
     }
 }
