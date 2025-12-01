@@ -2,6 +2,8 @@ package entity;
 
 import java.time.LocalDate;
 
+import java.io.Serializable;
+
 public class BacktestConfig {
 
     private final String projectId;
@@ -22,9 +24,37 @@ public class BacktestConfig {
         this.strategyName = strategyName;
     }
 
-    public String getProjectId()     { return projectId; }
-    public LocalDate getStartDate()  { return startDate; }
-    public LocalDate getEndDate()    { return endDate; }
-    public double getInitialCapital(){ return initialCapital; }
-    public String getStrategyName()  { return strategyName; }
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public double getInitialCapital() {
+        return initialCapital;
+    }
+
+    public String getStrategyName() {
+        return strategyName;
+    }
+
+    public enum Factor implements Serializable {
+        MOMENTUM_12_1,
+        REVERSAL_1_1,
+        SIZE,
+        VALUE_PROXY,
+        LOW_VOL
+    }
+
+    public enum PreprocessingMethod {
+        WINSORIZE,
+        Z_SCORE,
+        NONE
+    }
 }
