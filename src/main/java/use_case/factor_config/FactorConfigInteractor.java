@@ -61,10 +61,11 @@ public class FactorConfigInteractor implements FactorConfigInputBoundary {
         final Map<Factor, Double> weights = inputData.getWeights();
         final PreprocessingMethod preprocessing = inputData.getPreprocessing();
 
-        LOG.log(Level.INFO, "[UC-2] Execute with symbols=" + symbols
-                + ", selectedFactors=" + selected
+        // Debug-level input echo; keep summary results at INFO below
+        LOG.log(Level.FINE, "[UC-2] Execute symbols=" + symbols
+                + ", factors=" + selected
                 + ", weights=" + weights
-                + ", preprocessing=" + preprocessing);
+                + ", prep=" + preprocessing);
 
         // 1) Compute raw per-factor scores
         Map<Factor, Map<String, Double>> rawByFactor = new EnumMap<>(Factor.class);
@@ -72,11 +73,11 @@ public class FactorConfigInteractor implements FactorConfigInputBoundary {
             FactorCalculator calc = calculators.get(f);
             if (calc == null) {
                 // Skip unknown factors gracefully
-                LOG.log(Level.WARNING, "[UC-2] No calculator found for factor=" + f + ", skipping.");
+                LOG.log(Level.WARNING, "[UC-2] No calculator for factor=" + f + "; skipping");
                 continue;
             }
             Map<String, Double> scores = calc.compute(symbols, dataGateway);
-            LOG.log(Level.INFO, "[UC-2] Computed raw scores for " + f + ": entries=" + scores.size());
+            LOG.log(Level.FINE, "[UC-2] Computed raw scores for " + f + " (" + scores.size() + ")");
             rawByFactor.put(f, scores);
         }
 
@@ -87,7 +88,6 @@ public class FactorConfigInteractor implements FactorConfigInputBoundary {
             Map<String, Double> processed;
             if (preprocessing == PreprocessingMethod.Z_SCORE) {
                 processed = zScore(values);
-                // quick stats
                 double mean = values.values().stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
                 double variance = values.values().stream().mapToDouble(v -> (v - mean) * (v - mean)).average().orElse(0.0);
                 double std = Math.sqrt(variance);
@@ -140,9 +140,9 @@ public class FactorConfigInteractor implements FactorConfigInputBoundary {
             String top = rows.subList(0, n).stream()
                     .map(r -> r.symbol + ":" + String.format(java.util.Locale.US, "%.4f", r.composite))
                     .collect(Collectors.joining(", "));
-            LOG.log(Level.INFO, "[UC-2] Ranked " + rows.size() + " symbols. Top " + n + " => " + top);
+            LOG.log(Level.INFO, "[UC-2] Ranked " + rows.size() + " symbols; top " + n + ": " + top);
         } else {
-            LOG.log(Level.INFO, "[UC-2] No rows produced in factor ranking (check inputs and data gateway).");
+            LOG.log(Level.WARNING, "[UC-2] No rows produced in factor ranking");
         }
 
         presenter.present(new FactorConfigOutputData(rows));
@@ -162,19 +162,16 @@ public class FactorConfigInteractor implements FactorConfigInputBoundary {
     }
 
     private static Map<String, Double> winsorize(Map<String, Double> values, double lowerProb, double upperProb) {
-        // Extract and sort values
         List<Double> sorted = new ArrayList<>(values.values());
         sorted.sort(Double::compareTo);
         if (sorted.isEmpty()) return new HashMap<>();
 
-        // Clamp probabilities
         lowerProb = Math.max(0.0, Math.min(lowerProb, 1.0));
         upperProb = Math.max(0.0, Math.min(upperProb, 1.0));
         if (upperProb < lowerProb) {
             double tmp = lowerProb; lowerProb = upperProb; upperProb = tmp;
         }
 
-        // Compute quantile indices (inclusive floor)
         int n = sorted.size();
         int li = (int) Math.floor(lowerProb * (n - 1));
         int ui = (int) Math.floor(upperProb * (n - 1));

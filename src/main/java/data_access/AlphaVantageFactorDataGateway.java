@@ -38,7 +38,7 @@ public class AlphaVantageFactorDataGateway implements FactorDataGateway {
     public double momentum12m1(String symbol) {
         List<Double> closes = getAscendingCloses(symbol);
         if (closes.size() < 64) {
-            LOG.log(Level.FINE, "[Factors][" + symbol + "] insufficient history for 3m momentum");
+            LOG.log(Level.FINE, "[Factors][" + symbol + "] insufficient history for 12-1 momentum");
             return 0.0;
         }
         double p_recent = closes.get(closes.size() - 22);
@@ -46,8 +46,7 @@ public class AlphaVantageFactorDataGateway implements FactorDataGateway {
 
         if (p_recent <= 0 || p_past <= 0) return 0.0;
         double val = (p_recent / p_past) - 1.0;
-
-        LOG.log(Level.INFO, String.format(Locale.US, "[Factors][%s] Momentum(3m)=%.6f", symbol, val));
+        LOG.log(Level.FINE, String.format(Locale.US, "[Factors][%s] Momentum(12-1)=%.6f", symbol, val));
         return val;
     }
 
@@ -72,7 +71,7 @@ public class AlphaVantageFactorDataGateway implements FactorDataGateway {
         if (p_now <= 0 || p_prev_month <= 0) return 0.0;
 
         double val = (p_now / p_prev_month) - 1.0;
-        LOG.log(Level.INFO, String.format(Locale.US, "[Factors][%s] Reversal(1m)=%.6f (Prices: %.2f / %.2f)", symbol, val, p_now, p_prev_month));
+        LOG.log(Level.FINE, String.format(Locale.US, "[Factors][%s] Reversal(1m)=%.6f", symbol, val));
         return val;
     }
 
