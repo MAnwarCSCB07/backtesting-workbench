@@ -12,29 +12,29 @@ public class RunBacktestPresenter implements RunBacktestOutputBoundary {
     }
 
     @Override
-    public void present(RunBacktestOutputData outputData) {
-        RunBacktestState state = viewModel.getState();
+    public void presentSuccess(RunBacktestOutputData outputData) {
 
-        state.setProjectId(outputData.getProjectId());
+        RunBacktestState state = viewModel.getState();
         state.setFinalValue(outputData.getFinalValue());
         state.setMaxDrawdown(outputData.getMaxDrawdown());
-        state.setEquityCurve(outputData.getEquityCurve());
+        state.setTotalReturn(outputData.getTotalReturn());
         state.setStatusMessage("Backtest completed successfully.");
 
         viewModel.setState(state);
-        viewModel.fireStateChanged();
+        viewModel.firePropertyChange();
     }
 
     @Override
     public void presentFailure(String errorMessage) {
-        RunBacktestState state = viewModel.getState();
 
+        RunBacktestState state = viewModel.getState();
         state.setStatusMessage(errorMessage);
-        state.setEquityCurve(null);
+
         state.setFinalValue(null);
         state.setMaxDrawdown(null);
+        state.setTotalReturn(null);
 
         viewModel.setState(state);
-        viewModel.fireStateChanged();
+        viewModel.firePropertyChange();
     }
 }

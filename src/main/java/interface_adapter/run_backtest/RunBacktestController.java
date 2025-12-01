@@ -11,8 +11,18 @@ public class RunBacktestController {
         this.interactor = interactor;
     }
 
-    public void runBacktest(String projectId) {
-        RunBacktestInputData inputData = new RunBacktestInputData(projectId);
+    /**
+     * Trigger the backtest with all user inputs from the view.
+     */
+    public void runBacktest(String projectId,
+                            String ticker,
+                            String capital,
+                            String startDate,
+                            String endDate) {
+
+        RunBacktestInputData inputData =
+                new RunBacktestInputData(projectId, ticker, capital, startDate, endDate);
+
         interactor.execute(inputData);
     }
 }

@@ -1,21 +1,23 @@
 package use_case.run_backtest;
 
 import data_access.BacktestDataAccessInterface;
+import entity.BacktestResult;
+import entity.PriceBar;
 import entity.BacktestConfig;
 import entity.Universe;
-import entity.PriceBar;
-import entity.BacktestResult;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.ArrayList;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 class RunBacktestInteractorTest {
 
-    // Fake DAO for predictable testing
+    /**
+     * Fake DAO used only for the test.
+     */
     private static class FakeDAO implements BacktestDataAccessInterface {
 
         @Override
@@ -23,7 +25,7 @@ class RunBacktestInteractorTest {
             return new BacktestConfig(
                     projectId,
                     LocalDate.of(2020, 1, 1),
-                    LocalDate.of(2020, 1, 3),
+                    LocalDate.of(2020, 1, 10),
                     10000.0,
                     "buy_and_hold"
             );
@@ -36,41 +38,35 @@ class RunBacktestInteractorTest {
 
         @Override
         public List<PriceBar> getPriceSeries(String ticker, LocalDate start, LocalDate end) {
-            List<PriceBar> prices = new ArrayList<>();
-            prices.add(new PriceBar("AAPL", LocalDate.of(2020, 1, 1),
-                    100, 101, 99, 100, 1000000));
-            prices.add(new PriceBar("AAPL", LocalDate.of(2020, 1, 2),
-                    101, 102, 100, 101, 1000000));
-            prices.add(new PriceBar("AAPL", LocalDate.of(2020, 1, 3),
-                    102, 103, 101, 102, 1000000));
-            return prices;
+            List<PriceBar> list = new ArrayList<>();
+            // deterministic prices
+            list.add(new PriceBar("AAPL", LocalDate.of(2020, 1, 1), 100, 100, 100, 100, 1000));
+            list.add(new PriceBar("AAPL", LocalDate.of(2020, 1, 2), 110, 110, 110, 110, 1000));
+            return list;
         }
 
         @Override
         public void saveResult(BacktestResult result) {
-            // Not needed for this test
+            // do nothing
         }
     }
 
-    // Fake presenter to capture results
+    /**
+     * Fake Presenter captures output for assertions.
+     */
     private static class FakePresenter implements RunBacktestOutputBoundary {
 
-        boolean successCalled = false;
-        boolean failureCalled = false;
-
-        RunBacktestOutputData data;
-        String errorMessage;
+        RunBacktestOutputData captured;
+        String failureMessage;
 
         @Override
-        public void present(RunBacktestOutputData outputData) {
-            successCalled = true;
-            data = outputData;
+        public void presentSuccess(RunBacktestOutputData outputData) {
+            this.captured = outputData;
         }
 
         @Override
         public void presentFailure(String errorMessage) {
-            failureCalled = true;
-            this.errorMessage = errorMessage;
+            this.failureMessage = errorMessage;
         }
     }
 
@@ -79,18 +75,22 @@ class RunBacktestInteractorTest {
         FakeDAO dao = new FakeDAO();
         FakePresenter presenter = new FakePresenter();
 
-        RunBacktestInteractor interactor =
-                new RunBacktestInteractor(dao, presenter);
+        RunBacktestInteractor interactor = new RunBacktestInteractor(dao, presenter);
 
-        RunBacktestInputData input = new RunBacktestInputData("test-project");
+        RunBacktestInputData input = new RunBacktestInputData(
+                "demo",
+                "AAPL",
+                "10000",
+                "2020-01-01",
+                "2020-01-10"
+        );
+
         interactor.execute(input);
 
-        Assertions.assertTrue(presenter.successCalled);
-        Assertions.assertFalse(presenter.failureCalled);
+        Assertions.assertNull(presenter.failureMessage);
+        Assertions.assertNotNull(presenter.captured);
 
-        Assertions.assertEquals("test-project", presenter.data.getProjectId());
-        Assertions.assertTrue(presenter.data.getFinalValue() > 10000);
-        Assertions.assertEquals(3, presenter.data.getEquityCurve().size());
+        // final value should grow by 10% (100 → 110)
+        Assertions.assertEquals(11000.0, presenter.captured.getFinalValue(), 0.01);
     }
-
 }

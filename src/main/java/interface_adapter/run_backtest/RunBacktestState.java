@@ -1,30 +1,41 @@
 package interface_adapter.run_backtest;
 
-import java.util.List;
-
 public class RunBacktestState {
-
-    private String projectId = "";
-    private String statusMessage = "";
-    private List<Double> equityCurve;
 
     private Double finalValue;
     private Double maxDrawdown;
+    private Double totalReturn;
+    private String statusMessage;    // text shown in the status label
 
-    public RunBacktestState() { }
+    public Double getFinalValue() {
+        return finalValue;
+    }
 
-    public String getProjectId() { return projectId; }
-    public void setProjectId(String projectId) { this.projectId = projectId; }
+    public void setFinalValue(Double finalValue) {
+        this.finalValue = finalValue;
+    }
 
-    public String getStatusMessage() { return statusMessage; }
-    public void setStatusMessage(String statusMessage) { this.statusMessage = statusMessage; }
+    public Double getMaxDrawdown() {
+        return maxDrawdown;
+    }
 
-    public List<Double> getEquityCurve() { return equityCurve; }
-    public void setEquityCurve(List<Double> equityCurve) { this.equityCurve = equityCurve; }
+    public void setMaxDrawdown(Double maxDrawdown) {
+        this.maxDrawdown = maxDrawdown;
+    }
 
-    public Double getFinalValue() { return finalValue; }
-    public void setFinalValue(Double finalValue) { this.finalValue = finalValue; }
+    public Double getTotalReturn() {
+        return totalReturn;
+    }
 
-    public Double getMaxDrawdown() { return maxDrawdown; }
-    public void setMaxDrawdown(Double maxDrawdown) { this.maxDrawdown = maxDrawdown; }
+    public void setTotalReturn(Double totalReturn) {
+        this.totalReturn = totalReturn;
+    }
+
+    public String getStatusMessage() {
+        return statusMessage;
+    }
+
+    public void setStatusMessage(String statusMessage) {
+        this.statusMessage = statusMessage;
+    }
 }
