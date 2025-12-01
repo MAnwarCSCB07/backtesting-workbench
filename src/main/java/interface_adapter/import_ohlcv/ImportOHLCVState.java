@@ -6,8 +6,10 @@ import java.util.List;
 /**
  * View-model state for the Import OHLCV screen.
  * Holds the result of the last import operation.
+ *
+ * This replaces the old ImportOHLCVViewState.
  */
-public class ImportOHLCVViewState {
+public class ImportOHLCVState {
 
     /**
      * Optional: project ID for which data was last imported.
@@ -28,6 +30,8 @@ public class ImportOHLCVViewState {
      * Tickers that were requested but had no data.
      */
     private List<String> missingTickers = new ArrayList<>();
+
+    // ---------- Core getters / setters ----------
 
     public String getProjectId() {
         return projectId;
@@ -50,7 +54,7 @@ public class ImportOHLCVViewState {
     }
 
     public void setTickersLoaded(List<String> tickersLoaded) {
-        this.tickersLoaded = tickersLoaded;
+        this.tickersLoaded = tickersLoaded != null ? tickersLoaded : new ArrayList<>();
     }
 
     public List<String> getMissingTickers() {
@@ -58,6 +62,14 @@ public class ImportOHLCVViewState {
     }
 
     public void setMissingTickers(List<String> missingTickers) {
-        this.missingTickers = missingTickers;
+        this.missingTickers = missingTickers != null ? missingTickers : new ArrayList<>();
+    }
+
+    public List<String> getLoadedTickers() {
+        return tickersLoaded;
+    }
+
+    public void setLoadedTickers(List<String> loadedTickers) {
+        setTickersLoaded(loadedTickers);
     }
 }

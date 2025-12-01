@@ -1,12 +1,14 @@
 package data_access;
 
 import entity.PriceBar;
-import use_case.import_ohlcv.ImportOHLCVProjectRepository;
+import use_case.import_ohlcv.ImportOHLCVProjectDataAccessInterface;
+
+import java.util.HashMap;
+import java.util.Map;
+
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,7 +20,7 @@ import java.util.Set;
  *
  * This keeps UC-1 clean and testable without forcing a full persistence layer.
  */
-public class InMemoryImportProjectRepository implements ImportOHLCVProjectRepository {
+public class InMemoryImportProjectRepository implements ImportOHLCVProjectDataAccessInterface {
 
     private final Set<String> existingProjects = new HashSet<>();
     private final Map<String, ImportRecord> importsByProject = new HashMap<>();
@@ -43,7 +45,17 @@ public class InMemoryImportProjectRepository implements ImportOHLCVProjectReposi
         existingProjects.add(projectId);
         importsByProject.put(projectId,
                 new ImportRecord(projectId, start, end, pricesByTicker));
-        // TODO: later, bridge this to a real Project/Backtest repository if desired.
+        // TODO: later, bridge this to a real Project/Backtest repository
+    }
+
+    @Override
+    public boolean existsById(String projectId) {
+        return false;
+    }
+
+    @Override
+    public void saveImportedPrices(String projectId, Map<String, List<PriceBar>> priceSeries) {
+
     }
 
     private static class ImportRecord {

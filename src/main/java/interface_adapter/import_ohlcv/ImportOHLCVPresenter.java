@@ -29,11 +29,12 @@ public class ImportOHLCVPresenter implements ImportOHLCVOutputBoundary {
     @Override
     public void prepareSuccessView(ImportOHLCVOutputData outputData) {
 
-        ImportOHLCVViewState state = viewModel.getState();
+        // IMPORTANT: use ImportOHLCVState, not ImportOHLCVViewState
+        ImportOHLCVState state = viewModel.getState();
 
         state.setProjectId(outputData.getProjectId());
 
-        List<String> loaded = safeList(outputData.getTickersLoaded());
+        List<String> loaded  = safeList(outputData.getTickersLoaded());
         List<String> missing = safeList(outputData.getMissingTickers());
 
         state.setTickersLoaded(loaded);
@@ -61,7 +62,7 @@ public class ImportOHLCVPresenter implements ImportOHLCVOutputBoundary {
         viewModel.setState(state);
         viewModel.firePropertyChange();
 
-        // We generally stay on the same view ("input stock data"), so no navigation needed.
+        // Usually we stay on "input stock data" view; navigation is optional.
         // If you wanted to force showing this card:
         // if (viewManagerModel != null) {
         //     viewManagerModel.setState(viewModel.getViewName());
@@ -72,7 +73,7 @@ public class ImportOHLCVPresenter implements ImportOHLCVOutputBoundary {
     @Override
     public void prepareFailView(String errorMessage) {
 
-        ImportOHLCVViewState state = viewModel.getState();
+        ImportOHLCVState state = viewModel.getState();
         state.setStatusMessage(errorMessage);
         state.setTickersLoaded(Collections.emptyList());
         state.setMissingTickers(Collections.emptyList());

@@ -4,24 +4,42 @@ import interface_adapter.ViewModel;
 
 /**
  * ViewModel for UC-1: Import OHLCV.
- * The view name matches the InputStockDataView card key.
+ *
+ * Holds ImportOHLCVState and notifies listeners (views)
+ * whenever the state changes.
  */
-public class ImportOHLCVViewModel extends ViewModel<ImportOHLCVViewState> {
+public class ImportOHLCVViewModel extends ViewModel<ImportOHLCVState> {
 
     public static final String VIEW_NAME = "input stock data";
 
     public ImportOHLCVViewModel() {
         super(VIEW_NAME);
-        this.setState(new ImportOHLCVViewState());
+        // Initialize with a default, empty state
+        this.setStateInternal(new ImportOHLCVState());
     }
 
-    @Override
-    public ImportOHLCVViewState getState() {
+    public ImportOHLCVState getState() {
+        return getStateInternal();
+    }
+
+    public void setState(ImportOHLCVState state) {
+        setStateInternal(state);
+    }
+
+    /**
+     * Convenience method for presenters to fire updates.
+     */
+    public void fireStateChanged() {
+        firePropertyChange();
+    }
+
+    // ---- Private helpers to avoid raw-type warnings ----
+
+    private ImportOHLCVState getStateInternal() {
         return super.getState();
     }
 
-    @Override
-    public void setState(ImportOHLCVViewState state) {
+    private void setStateInternal(ImportOHLCVState state) {
         super.setState(state);
     }
 }
