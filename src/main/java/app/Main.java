@@ -9,20 +9,23 @@ public class Main {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignored) {
         }
+        System.out.println("Main started");
         AppBuilder appBuilder = new AppBuilder();
         JFrame application = appBuilder
-                .addLoginView()
                 .addSignupView()
+                .addLoginView()
                 .addLoggedInView()
                 .addAlphaVantageView()
                 .addInputStockDataView()
                 .addConfigureFactorsView()
                 .addFactorResultsView()
                 .addChartsView()
+                .addRunBacktestView()
                 .addSignupUseCase()
                 .addLoginUseCase()
                 .addLogoutUseCase()
                 .addChangePasswordUseCase()
+                .addRunBacktestUseCase()
                 .addFactorConfigUseCase()
                 .build();
 

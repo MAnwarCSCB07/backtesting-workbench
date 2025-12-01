@@ -1,0 +1,1 @@
+project=demo-project, finalValue=13127.91, maxDrawdown=0.0561
