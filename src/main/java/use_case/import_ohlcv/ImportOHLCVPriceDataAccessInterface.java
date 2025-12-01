@@ -29,4 +29,11 @@ public interface ImportOHLCVPriceDataAccessInterface {
     Map<String, List<PriceBar>> fetchPrices(List<String> tickers,
                                             LocalDate startDate,
                                             LocalDate endDate);
+
+    Map<String, List<PriceBar>> fetchPrices(
+            String projectId,
+            List<String> tickers,
+            LocalDate start,
+            LocalDate end
+    );
 }
