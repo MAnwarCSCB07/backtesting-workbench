@@ -22,6 +22,11 @@ import interface_adapter.logout.LogoutPresenter;
 import interface_adapter.signup.SignupController;
 import interface_adapter.signup.SignupPresenter;
 import interface_adapter.signup.SignupViewModel;
+
+import interface_adapter.run_backtest.RunBacktestController;
+import interface_adapter.run_backtest.RunBacktestPresenter;
+import interface_adapter.run_backtest.RunBacktestViewModel;
+
 import interface_adapter.factor_config.FactorConfigController;
 import interface_adapter.factor_config.FactorConfigPresenter;
 import interface_adapter.factor_config.FactorViewModel;
@@ -29,10 +34,6 @@ import data_access.InMemoryFactorDataGateway;
 import use_case.factor_config.FactorConfigInputBoundary;
 import use_case.factor_config.FactorConfigInteractor;
 import use_case.factor_config.FactorConfigOutputBoundary;
-
-import interface_adapter.run_backtest.RunBacktestController;
-import interface_adapter.run_backtest.RunBacktestPresenter;
-import interface_adapter.run_backtest.RunBacktestViewModel;
 
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
@@ -207,6 +208,7 @@ public class AppBuilder {
 
     /**
      * Adds the Logout Use Case to the application.
+     *
      *
      * @return this builder
      */
