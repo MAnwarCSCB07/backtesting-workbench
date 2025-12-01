@@ -1,36 +1,65 @@
 package use_case.save_export;
 
 /**
- * Input data for the Save/Export use case.
- * Contains the information needed to save and export a project.
+ * Input Data for the Save/Export Use Case.
+ * Contains all the information needed to save and export a project.
  */
 public class SaveExportInputData {
     private final String projectId;
-    private final String exportFileType; // "CSV", "HTML", or "BOTH"
-    private final String saveLocation; // Directory path, or null for default
+    private final String projectName;
+    private final String exportType; // "CSV", "HTML", "BOTH", or "JSON" for save only
+    private final String filePath; // Optional: if null, use default location
 
     /**
-     * Creates SaveExportInputData with the given parameters.
+     * Creates SaveExportInputData with all parameters.
      * @param projectId the ID of the project to save/export
-     * @param exportFileType the type of export file ("CSV", "HTML", or "BOTH")
-     * @param saveLocation the directory to save files (null for default location)
+     * @param projectName the name of the project
+     * @param exportType the type of export: "CSV", "HTML", "BOTH", or "JSON"
+     * @param filePath the path where files should be saved (null for default location)
      */
-    public SaveExportInputData(String projectId, String exportFileType, String saveLocation) {
+    public SaveExportInputData(String projectId, String projectName, String exportType, String filePath) {
         this.projectId = projectId;
-        this.exportFileType = exportFileType;
-        this.saveLocation = saveLocation;
+        this.projectName = projectName;
+        this.exportType = exportType;
+        this.filePath = filePath;
+    }
+
+    /**
+     * Creates SaveExportInputData with default file path.
+     * @param projectId the ID of the project to save/export
+     * @param projectName the name of the project
+     * @param exportType the type of export: "CSV", "HTML", "BOTH", or "JSON"
+     */
+    public SaveExportInputData(String projectId, String projectName, String exportType) {
+        this(projectId, projectName, exportType, null);
     }
 
     public String getProjectId() {
         return projectId;
     }
 
-    public String getExportFileType() {
-        return exportFileType;
+    public String getProjectName() {
+        return projectName;
     }
 
-    public String getSaveLocation() {
-        return saveLocation;
+    public String getExportType() {
+        return exportType;
+    }
+
+    /**
+     * Gets the file path, which may be null if default location should be used.
+     * @return the file path, or null for default
+     */
+    public String getFilePath() {
+        return filePath;
+    }
+
+    /**
+     * Checks if a custom file path was provided.
+     * @return true if filePath is not null, false otherwise
+     */
+    public boolean hasCustomPath() {
+        return filePath != null && !filePath.isEmpty();
     }
 }
 
