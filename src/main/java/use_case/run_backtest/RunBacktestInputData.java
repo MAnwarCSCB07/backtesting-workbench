@@ -1,23 +1,35 @@
 package use_case.run_backtest;
 
+import java.time.LocalDate;
+
+/**
+ * Input data for the Run Backtest use case.
+ */
 public class RunBacktestInputData {
 
     private final String projectId;
-    private final String ticker;      // may be null/blank → use default from config
-    private final String capital;     // string from UI, parsed in interactor
-    private final String startDate;   // "YYYY-MM-DD" or blank
-    private final String endDate;     // "YYYY-MM-DD" or blank
+    private final String ticker;
+    private final double initialCapital;
+    private final LocalDate startDate;
+    private final LocalDate endDate;
+
+    /**
+     * Risk-free rate in PERCENT per year (e.g., 4.5 means 4.5%).
+     */
+    private final double riskFreeRatePercent;
 
     public RunBacktestInputData(String projectId,
                                 String ticker,
-                                String capital,
-                                String startDate,
-                                String endDate) {
+                                double initialCapital,
+                                LocalDate startDate,
+                                LocalDate endDate,
+                                double riskFreeRatePercent) {
         this.projectId = projectId;
         this.ticker = ticker;
-        this.capital = capital;
+        this.initialCapital = initialCapital;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.riskFreeRatePercent = riskFreeRatePercent;
     }
 
     public String getProjectId() {
@@ -28,15 +40,22 @@ public class RunBacktestInputData {
         return ticker;
     }
 
-    public String getCapital() {
-        return capital;
+    public double getInitialCapital() {
+        return initialCapital;
     }
 
-    public String getStartDate() {
+    public LocalDate getStartDate() {
         return startDate;
     }
 
-    public String getEndDate() {
+    public LocalDate getEndDate() {
         return endDate;
+    }
+
+    /**
+     * Risk-free rate in percent per year (e.g., 4.5 means 4.5%).
+     */
+    public double getRiskFreeRatePercent() {
+        return riskFreeRatePercent;
     }
 }

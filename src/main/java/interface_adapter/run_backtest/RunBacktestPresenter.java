@@ -15,9 +15,16 @@ public class RunBacktestPresenter implements RunBacktestOutputBoundary {
     public void presentSuccess(RunBacktestOutputData outputData) {
 
         RunBacktestState state = viewModel.getState();
+
         state.setFinalValue(outputData.getFinalValue());
         state.setMaxDrawdown(outputData.getMaxDrawdown());
         state.setTotalReturn(outputData.getTotalReturn());
+        state.setAnnualizedReturn(outputData.getAnnualizedReturn());
+        state.setVolatility(outputData.getVolatilityAnnualized());
+        state.setSharpeRatio(outputData.getSharpeRatio());
+        state.setWorstDailyLoss(outputData.getWorstDailyLossPercent());
+        state.setEquityCurve(outputData.getEquityCurve());
+
         state.setStatusMessage("Backtest completed successfully.");
 
         viewModel.setState(state);
@@ -26,13 +33,8 @@ public class RunBacktestPresenter implements RunBacktestOutputBoundary {
 
     @Override
     public void presentFailure(String errorMessage) {
-
         RunBacktestState state = viewModel.getState();
         state.setStatusMessage(errorMessage);
-
-        state.setFinalValue(null);
-        state.setMaxDrawdown(null);
-        state.setTotalReturn(null);
 
         viewModel.setState(state);
         viewModel.firePropertyChange();

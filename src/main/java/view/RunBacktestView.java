@@ -8,11 +8,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.text.DecimalFormat;
+import java.time.LocalDate;
 
 public class RunBacktestView extends JPanel implements PropertyChangeListener {
 
-    private RunBacktestController controller;
+    private RunBacktestController controller;              // set later by AppBuilder
     private final RunBacktestViewModel viewModel;
 
     // Inputs
@@ -21,148 +21,183 @@ public class RunBacktestView extends JPanel implements PropertyChangeListener {
     private final JTextField capitalField     = new JTextField(10);
     private final JTextField startDateField   = new JTextField(10);
     private final JTextField endDateField     = new JTextField(10);
+    private final JTextField riskFreeField    = new JTextField(6);
 
     // Actions
-    private final JButton runButton = new JButton("Run Backtest");
+    private final JButton runButton           = new JButton("Run Backtest");
+    private final JButton showCurveButton     = new JButton("Show Equity Curve");
 
-    // Outputs (inside results panel)
+    // Outputs
     private final JLabel statusLabel      = new JLabel();
     private final JLabel finalValueLabel  = new JLabel();
     private final JLabel drawdownLabel    = new JLabel();
     private final JLabel returnLabel      = new JLabel();
+    private final JLabel annReturnLabel   = new JLabel();
+    private final JLabel volLabel         = new JLabel();
+    private final JLabel sharpeLabel      = new JLabel();
+    private final JLabel worstLossLabel   = new JLabel();
 
-    private final DecimalFormat moneyFormat   = new DecimalFormat("#,##0.00");
-    private final DecimalFormat percentFormat = new DecimalFormat("0.00%");
+    public static final String VIEW_NAME = RunBacktestViewModel.VIEW_NAME;
 
     public RunBacktestView(RunBacktestViewModel viewModel) {
         this.viewModel = viewModel;
         this.viewModel.addPropertyChangeListener(this);
 
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        setLayout(new BorderLayout());
+        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // =========================================================================
-        // SETTINGS WRAPPER (keeps form centered)
-        // =========================================================================
-        JPanel settingsWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        settingsWrapper.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JPanel inputPanel = buildInputPanel();
-        settingsWrapper.add(inputPanel);
-
-        add(settingsWrapper);
-
-        // =========================================================================
-        // RUN BUTTON
-        // =========================================================================
-        add(Box.createRigidArea(new Dimension(0, 15)));
-        runButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        add(runButton);
-
-        runButton.addActionListener(e -> {
-            if (controller == null) return;
-
-            controller.runBacktest(
-                    projectIdField.getText().trim(),
-                    tickerField.getText().trim(),
-                    capitalField.getText().trim(),
-                    startDateField.getText().trim(),
-                    endDateField.getText().trim()
-            );
-        });
-
-        // =========================================================================
-        // RESULTS WRAPPER + PANEL (centered)
-        // =========================================================================
-        add(Box.createRigidArea(new Dimension(0, 20)));
-
-        JPanel resultsWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        resultsWrapper.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JPanel resultsPanel = buildResultsPanel();
-        resultsWrapper.add(resultsPanel);
-
-        add(resultsWrapper);
-    }
-
-    /**
-     * Builds the "Backtest Settings" input form using GridBagLayout.
-     */
-    private JPanel buildInputPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("Backtest Settings"));
-        panel.setPreferredSize(new Dimension(450, 300));
-
+        // -------- Top: settings --------
+        JPanel settingsPanel = new JPanel();
+        settingsPanel.setBorder(BorderFactory.createTitledBorder("Backtest Settings"));
+        settingsPanel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(6, 6, 6, 6);
-        gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Defaults
+        projectIdField.setText("demo-project");
+        tickerField.setText("AAPL");
+        capitalField.setText("10000");
+        startDateField.setText(LocalDate.now().minusDays(27).toString());
+        endDateField.setText(LocalDate.now().toString());
+        riskFreeField.setText("4.5");
 
         int row = 0;
 
-        // Project ID
-        gbc.gridx = 0; gbc.gridy = row;
-        panel.add(new JLabel("Project ID:"), gbc);
+        // row 0: Project ID
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        settingsPanel.add(new JLabel("Project ID:"), gbc);
+
         gbc.gridx = 1;
-        projectIdField.setText("demo-project");
-        panel.add(projectIdField, gbc);
+        gbc.weightx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        settingsPanel.add(projectIdField, gbc);
         row++;
 
-        // Ticker
-        gbc.gridx = 0; gbc.gridy = row;
-        panel.add(new JLabel("Ticker:"), gbc);
+        // row 1: Ticker
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        settingsPanel.add(new JLabel("Ticker:"), gbc);
+
         gbc.gridx = 1;
-        tickerField.setText("AAPL");
-        panel.add(tickerField, gbc);
+        gbc.weightx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        settingsPanel.add(tickerField, gbc);
         row++;
 
-        // Capital
-        gbc.gridx = 0; gbc.gridy = row;
-        panel.add(new JLabel("Initial Capital ($):"), gbc);
+        // row 2: Initial capital
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        settingsPanel.add(new JLabel("Initial Capital ($):"), gbc);
+
         gbc.gridx = 1;
-        capitalField.setText("10000");
-        panel.add(capitalField, gbc);
+        gbc.weightx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        settingsPanel.add(capitalField, gbc);
         row++;
 
-        // Start date
-        gbc.gridx = 0; gbc.gridy = row;
-        panel.add(new JLabel("Start Date (YYYY-MM-DD):"), gbc);
+        // row 3: Start date
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        settingsPanel.add(new JLabel("Start Date (YYYY-MM-DD, max ~100 days):"), gbc);
+
         gbc.gridx = 1;
-        panel.add(startDateField, gbc);
+        gbc.weightx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        settingsPanel.add(startDateField, gbc);
         row++;
 
-        // End date
-        gbc.gridx = 0; gbc.gridy = row;
-        panel.add(new JLabel("End Date (YYYY-MM-DD):"), gbc);
-        gbc.gridx = 1;
-        panel.add(endDateField, gbc);
+        // row 4: End date
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        settingsPanel.add(new JLabel("End Date (YYYY-MM-DD):"), gbc);
 
-        return panel;
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        settingsPanel.add(endDateField, gbc);
+        row++;
+
+        // row 5: Risk-free rate
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        settingsPanel.add(new JLabel("Risk-free Rate (% per year):"), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        settingsPanel.add(riskFreeField, gbc);
+
+        add(settingsPanel, BorderLayout.NORTH);
+
+        // -------- Middle: buttons --------
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.add(runButton);
+        buttonPanel.add(showCurveButton);
+        add(buttonPanel, BorderLayout.CENTER);
+
+        // -------- Bottom: results --------
+        JPanel resultsPanel = new JPanel();
+        resultsPanel.setBorder(BorderFactory.createTitledBorder("Backtest Results"));
+        resultsPanel.setLayout(new BoxLayout(resultsPanel, BoxLayout.Y_AXIS));
+
+        resultsPanel.add(statusLabel);
+        resultsPanel.add(finalValueLabel);
+        resultsPanel.add(drawdownLabel);
+        resultsPanel.add(returnLabel);
+        resultsPanel.add(annReturnLabel);
+        resultsPanel.add(volLabel);
+        resultsPanel.add(sharpeLabel);
+        resultsPanel.add(worstLossLabel);
+
+        add(resultsPanel, BorderLayout.SOUTH);
+
+        // -------- Button actions --------
+
+        // Run backtest
+        runButton.addActionListener(e -> {
+            if (controller == null) return;
+
+            String projectId = projectIdField.getText().trim();
+            String ticker    = tickerField.getText().trim();
+            String capital   = capitalField.getText().trim();
+            String start     = startDateField.getText().trim();
+            String end       = endDateField.getText().trim();
+            String rf        = riskFreeField.getText().trim();
+
+            controller.runBacktest(projectId, ticker, capital, start, end, rf);
+        });
+
+        // Show equity curve
+        showCurveButton.addActionListener(e -> {
+            RunBacktestState state = viewModel.getState();
+            if (state == null || state.getEquityCurve() == null || state.getEquityCurve().isEmpty()) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "No equity curve data. Run a backtest first.",
+                        "No Data",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+                return;
+            }
+            EquityCurveChartView.showEquityCurve(state.getEquityCurve());
+        });
     }
 
-    /**
-     * Builds the "Backtest Results" panel that shows status & metrics.
-     */
-    private JPanel buildResultsPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createTitledBorder("Backtest Results"));
-        panel.setPreferredSize(new Dimension(450, 140));
-
-        statusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        finalValueLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        drawdownLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        returnLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        panel.add(statusLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 5)));
-        panel.add(finalValueLabel);
-        panel.add(drawdownLabel);
-        panel.add(returnLabel);
-
-        return panel;
-    }
-
-    // Called by AppBuilder
+    // Called by AppBuilder after controller is created
     public void setRunBacktestController(RunBacktestController controller) {
         this.controller = controller;
     }
@@ -170,33 +205,40 @@ public class RunBacktestView extends JPanel implements PropertyChangeListener {
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         RunBacktestState state = viewModel.getState();
+        if (state == null) return;
 
-        // Status message (success / errors)
-        statusLabel.setText(state.getStatusMessage());
+        statusLabel.setText(state.getStatusMessage() == null ? "" : state.getStatusMessage());
 
-        // Final value
         if (state.getFinalValue() != null) {
-            finalValueLabel.setText("Final Value: $" + moneyFormat.format(state.getFinalValue()));
-        } else {
-            finalValueLabel.setText("");
-        }
+            finalValueLabel.setText(String.format("Final Value: $%.2f", state.getFinalValue()));
+        } else finalValueLabel.setText("");
 
-        // Max drawdown (assumed decimal like 0.056)
         if (state.getMaxDrawdown() != null) {
-            drawdownLabel.setText("Max Drawdown: " + percentFormat.format(state.getMaxDrawdown()));
-        } else {
-            drawdownLabel.setText("");
-        }
+            drawdownLabel.setText(String.format("Max Drawdown: %.2f %%", state.getMaxDrawdown() * 100.0));
+        } else drawdownLabel.setText("");
 
-        // Total return (already a percent or decimal? we stored as percent, so just show)
         if (state.getTotalReturn() != null) {
-            returnLabel.setText("Total Return: " + state.getTotalReturn() + " %");
-        } else {
-            returnLabel.setText("");
-        }
+            returnLabel.setText(String.format("Total Return: %.4f %%", state.getTotalReturn()));
+        } else returnLabel.setText("");
+
+        if (state.getAnnualizedReturn() != null) {
+            annReturnLabel.setText(String.format("Annualized Return: %.4f %%", state.getAnnualizedReturn()));
+        } else annReturnLabel.setText("");
+
+        if (state.getVolatility() != null) {
+            volLabel.setText(String.format("Volatility (Annualized): %.4f %%", state.getVolatility()));
+        } else volLabel.setText("");
+
+        if (state.getSharpeRatio() != null) {
+            sharpeLabel.setText(String.format("Sharpe Ratio: %.4f", state.getSharpeRatio()));
+        } else sharpeLabel.setText("");
+
+        if (state.getWorstDailyLoss() != null) {
+            worstLossLabel.setText(String.format("Worst Daily Loss: %.4f %%", state.getWorstDailyLoss()));
+        } else worstLossLabel.setText("");
     }
 
     public String getViewName() {
-        return RunBacktestViewModel.VIEW_NAME;
+        return VIEW_NAME;
     }
 }

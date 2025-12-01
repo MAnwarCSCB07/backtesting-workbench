@@ -2,3 +2,9 @@ project=demo-project, finalValue=13127.91, maxDrawdown=0.0561
 project=demo-project, finalValue=212667.79, maxDrawdown=0.0327
 project=demo-project, finalValue=207469.96, maxDrawdown=0.0327
 project=demo-project, finalValue=10349.63, maxDrawdown=0.0327
+project=demo-project, finalValue=9184.41, maxDrawdown=0.1650
+project=demo-project, finalValue=10364.24, maxDrawdown=0.0327
+project=demo-project, finalValue=11693.29, maxDrawdown=0.0542
+project=demo-project, finalValue=10364.24, maxDrawdown=0.0327
+project=demo-project, finalValue=10364.24, maxDrawdown=0.0327
+project=demo-project, finalValue=10326.25, maxDrawdown=0.0327
