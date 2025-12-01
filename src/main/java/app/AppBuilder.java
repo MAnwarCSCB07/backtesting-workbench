@@ -56,6 +56,21 @@ import use_case.run_backtest.RunBacktestInputBoundary;
 import use_case.run_backtest.RunBacktestInteractor;
 import use_case.run_backtest.RunBacktestOutputBoundary;
 
+import interface_adapter.import_ohlcv.ImportOHLCVController;
+import interface_adapter.import_ohlcv.ImportOHLCVPresenter;
+import interface_adapter.import_ohlcv.ImportOHLCVViewModel;
+
+import use_case.import_ohlcv.ImportOHLCVInputBoundary;
+import use_case.import_ohlcv.ImportOHLCVInteractor;
+import use_case.import_ohlcv.ImportOHLCVOutputBoundary;
+import use_case.import_ohlcv.ImportOHLCVPriceDataAccessInterface;
+
+import use_case.import_ohlcv.ImportOHLCVProjectDataAccessInterface;
+
+
+import data_access.AlphaVantageImportPriceDataAccess;
+import data_access.InMemoryImportProjectRepository;
+
 import view.*;
 
 import javax.swing.*;
@@ -99,6 +114,8 @@ public class AppBuilder {
     private RunBacktestViewModel runBacktestViewModel;
     private RunBacktestView runBacktestView;
 
+    private ImportOHLCVViewModel importOHLCVViewModel;
+
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
     }
@@ -137,10 +154,12 @@ public class AppBuilder {
     }
 
     public AppBuilder addInputStockDataView() {
-        inputStockDataView = new InputStockDataView(viewManagerModel);
-        cardPanel.add(inputStockDataView, inputStockDataView.viewName);
+        importOHLCVViewModel = new ImportOHLCVViewModel();
+        inputStockDataView = new InputStockDataView(importOHLCVViewModel, viewManagerModel);
+        cardPanel.add(inputStockDataView, inputStockDataView.getViewName());
         return this;
     }
+
 
     public AppBuilder addConfigureFactorsView() {
         configureFactorsView = new ConfigureFactorsView(viewManagerModel);
@@ -251,6 +270,32 @@ public class AppBuilder {
 
         return this;
     }
+
+    public AppBuilder addImportOHLCVUseCase() {
+        // Reuse Alpha Vantage in a UC-1-friendly way
+        final BacktestDataAccessInterface backtestDAO =
+                new AlphaVantageBacktestDataAccessObject("XRI7X6PMTUFWUH1E");
+
+        final ImportOHLCVPriceDataAccessInterface priceGateway =
+                new AlphaVantageImportPriceDataAccess(backtestDAO);
+
+        final ImportOHLCVProjectDataAccessInterface projectRepository =
+                new InMemoryImportProjectRepository();
+
+        final ImportOHLCVOutputBoundary presenter =
+                new ImportOHLCVPresenter(importOHLCVViewModel, viewManagerModel);
+
+        final ImportOHLCVInputBoundary interactor =
+                new ImportOHLCVInteractor(priceGateway, projectRepository, presenter);
+
+        final ImportOHLCVController controller =
+                new ImportOHLCVController(interactor);
+
+        inputStockDataView.setImportController(controller);
+
+        return this;
+    }
+
 
     public JFrame build() {
         final JFrame application = new JFrame("User Login Example");
