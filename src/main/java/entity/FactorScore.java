@@ -1,32 +1,38 @@
 package entity;
 
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.Map;
 
+import entity.BacktestConfig.Factor; // Import the Factor enum
+
 /**
- * Represents factor scores for a single security, including individual factor scores
- * and a composite score.
+ * Represents the "Report Card" for a specific stock.
+ * Contains the raw input data (scores) and the final calculated grade (composite).
  */
 public class FactorScore {
+
     private final String symbol;
-    private final Map<String, Double> scores;
+    // Changed key from String to Factor for safety
+    private final Map<Factor, Double> scores;
     private final double composite;
 
     /**
-     * Creates a new FactorScore.
-     * @param symbol the stock symbol
-     * @param scores a map of factor names to their scores
-     * @param composite the composite (weighted) score
+     * @param symbol    The ticker (e.g., "TSLA")
+     * @param scores    The raw factor values (e.g., Momentum = 1.5)
+     * @param composite The weighted sum calculated by the BacktestConfig
      */
-    public FactorScore(String symbol, Map<String, Double> scores, double composite) {
-        if (symbol == null || symbol.isEmpty()) {
-            throw new IllegalArgumentException("Symbol cannot be null or empty");
+    public FactorScore(String symbol, Map<Factor, Double> scores, double composite) {
+        if (symbol == null || symbol.trim().isEmpty()) {
+            throw new IllegalArgumentException("Symbol cannot be null or empty.");
         }
         if (scores == null) {
-            throw new IllegalArgumentException("Scores map cannot be null");
+            throw new IllegalArgumentException("Scores map cannot be null.");
         }
+
         this.symbol = symbol;
-        this.scores = new HashMap<>(scores); // Defensive copy
+        // Defensive copy using EnumMap
+        this.scores = Collections.unmodifiableMap(new EnumMap<>(scores));
         this.composite = composite;
     }
 
@@ -34,26 +40,17 @@ public class FactorScore {
         return symbol;
     }
 
-    /**
-     * Returns a copy of the scores map.
-     * @return a map of factor names to scores
-     */
-    public Map<String, Double> getScores() {
-        return new HashMap<>(scores);
+    public Map<Factor, Double> getScores() {
+        return scores;
     }
 
     public double getComposite() {
         return composite;
     }
 
-    /**
-     * Gets the score for a specific factor.
-     * @param factorName the name of the factor
-     * @return the score, or null if the factor doesn't exist
-     */
-    public Double getScore(String factorName) {
-        return scores.get(factorName);
+    @Override
+    public String toString() {
+        return String.format("Symbol: %s | Composite: %.4f | Details: %s",
+                symbol, composite, scores.toString());
     }
 }
-
-
