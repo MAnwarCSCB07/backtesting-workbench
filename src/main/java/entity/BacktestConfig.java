@@ -1,6 +1,12 @@
 package entity;
 
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+
+import java.io.Serializable;
 
 public class BacktestConfig {
 
@@ -44,7 +50,7 @@ public class BacktestConfig {
 
     // Enums
 
-    public enum Factor {
+    public enum Factor implements Serializable {
         MOMENTUM_12_1,
         REVERSAL_1_1,
         SIZE,
