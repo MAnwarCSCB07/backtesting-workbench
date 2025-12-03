@@ -19,7 +19,7 @@ public class ValueProxyFactor implements FactorCalculator {
     public Map<String, Double> compute(List<String> symbols, FactorDataGateway gateway) {
         Map<String, Double> out = new HashMap<>();
         for (String sym : symbols) {
-            out.put(sym, gateway.valueProxy(sym));
+            out.put(sym, gateway.getData(sym, FactorDataKeys.VALUE_PROXY));
         }
         return out;
     }

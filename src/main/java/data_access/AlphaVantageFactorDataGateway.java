@@ -1,6 +1,7 @@
 package data_access;
 
 import entity.factors.FactorDataGateway;
+import entity.factors.FactorDataKeys;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -35,7 +36,36 @@ public class AlphaVantageFactorDataGateway implements FactorDataGateway {
     }
 
     @Override
-    public double momentum12m1(String symbol) {
+    public double getData(String symbol, String dataKey) {
+        switch (dataKey) {
+            case FactorDataKeys.MOMENTUM_12M1:
+                return computeMomentum12m1(symbol);
+            case FactorDataKeys.REVERSAL:
+                return computeReversal(symbol);
+            case FactorDataKeys.VOLATILITY:
+                return computeVolatility(symbol);
+            case FactorDataKeys.SIZE:
+                return computeSize(symbol);
+            case FactorDataKeys.VALUE_PROXY:
+                return computeValueProxy(symbol);
+            default:
+                LOG.log(Level.FINE, "[AlphaVantage] Unsupported data key: " + dataKey);
+                return 0.0;
+        }
+    }
+
+    @Override
+    public boolean supportsDataKey(String dataKey) {
+        return FactorDataKeys.MOMENTUM_12M1.equals(dataKey)
+                || FactorDataKeys.REVERSAL.equals(dataKey)
+                || FactorDataKeys.VOLATILITY.equals(dataKey)
+                || FactorDataKeys.SIZE.equals(dataKey)
+                || FactorDataKeys.VALUE_PROXY.equals(dataKey);
+    }
+
+    // --- Private computation methods ---
+
+    private double computeMomentum12m1(String symbol) {
         List<Double> closes = getAscendingCloses(symbol);
         if (closes.size() < 64) {
             LOG.log(Level.FINE, "[Factors][" + symbol + "] insufficient history for 12-1 momentum");
@@ -55,8 +85,7 @@ public class AlphaVantageFactorDataGateway implements FactorDataGateway {
      * Calculated as the return of the last 1 month (21 trading days).
      * Formula: (P(t) / P(t-21)) - 1
      */
-    @Override
-    public double reversal(String symbol) {
+    private double computeReversal(String symbol) {
         List<Double> closes = getAscendingCloses(symbol);
 
         // We need at least 22 days of history
@@ -75,8 +104,7 @@ public class AlphaVantageFactorDataGateway implements FactorDataGateway {
         return val;
     }
 
-    @Override
-    public double volatility(String symbol) {
+    private double computeVolatility(String symbol) {
         List<Double> closes = getAscendingCloses(symbol);
         if (closes.size() < 61) return 0.0;
 
@@ -103,8 +131,7 @@ public class AlphaVantageFactorDataGateway implements FactorDataGateway {
         return ann;
     }
 
-    @Override
-    public double size(String symbol) {
+    private double computeSize(String symbol) {
         // Try cache first
         if (marketCapCache.containsKey(symbol)) {
             long mc = marketCapCache.get(symbol);
@@ -124,8 +151,7 @@ public class AlphaVantageFactorDataGateway implements FactorDataGateway {
         }
     }
 
-    @Override
-    public double valueProxy(String symbol) {
+    private double computeValueProxy(String symbol) {
         if (valueProxyCache.containsKey(symbol)) return valueProxyCache.get(symbol);
         JSONObject ov = fetchOverview(symbol);
         if (ov == null) return 0.0;
@@ -134,12 +160,14 @@ public class AlphaVantageFactorDataGateway implements FactorDataGateway {
         try {
             double pb = parseDoubleSafe(ov.optString("PriceToBookRatio", ""));
             if (pb > 0) proxy = 1.0 / pb;
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         if (proxy == 0.0) {
             try {
                 double pe = parseDoubleSafe(ov.optString("PERatio", ""));
                 if (pe > 0) proxy = 1.0 / pe;
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
         valueProxyCache.put(symbol, proxy);
         return proxy;

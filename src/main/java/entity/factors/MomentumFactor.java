@@ -19,7 +19,7 @@ public class MomentumFactor implements FactorCalculator {
     public Map<String, Double> compute(List<String> symbols, FactorDataGateway gateway) {
         Map<String, Double> out = new HashMap<>();
         for (String sym : symbols) {
-            out.put(sym, gateway.momentum12m1(sym));
+            out.put(sym, gateway.getData(sym, FactorDataKeys.MOMENTUM_12M1));
         }
         return out;
     }
