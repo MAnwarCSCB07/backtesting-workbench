@@ -1,5 +1,6 @@
 package view;
 
+import interface_adapter.ViewManagerModel;
 import interface_adapter.save_export.SaveExportController;
 import interface_adapter.save_export.SaveExportState;
 import interface_adapter.save_export.SaveExportViewModel;
@@ -20,6 +21,7 @@ import java.beans.PropertyChangeListener;
 public class SaveExportView extends JPanel implements ActionListener, PropertyChangeListener {
     private final String viewName = "save export";
     private final SaveExportViewModel saveExportViewModel;
+    private final ViewManagerModel viewManagerModel;
     private SaveExportController saveExportController = null;
 
     private final JTextField projectIdInputField = new JTextField(15);
@@ -31,8 +33,9 @@ public class SaveExportView extends JPanel implements ActionListener, PropertyCh
     private final JLabel messageLabel = new JLabel();
     private final JLabel errorLabel = new JLabel();
 
-    public SaveExportView(SaveExportViewModel saveExportViewModel) {
+    public SaveExportView(SaveExportViewModel saveExportViewModel, ViewManagerModel viewManagerModel) {
         this.saveExportViewModel = saveExportViewModel;
+        this.viewManagerModel = viewManagerModel;
         this.saveExportViewModel.addPropertyChangeListener(this);
 
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -81,8 +84,10 @@ public class SaveExportView extends JPanel implements ActionListener, PropertyCh
         JPanel buttons = new JPanel();
         saveExportButton = new JButton(SaveExportViewModel.SAVE_EXPORT_BUTTON_LABEL);
         cancelButton = new JButton(SaveExportViewModel.CANCEL_BUTTON_LABEL);
+        JButton backButton = new JButton("Back");
         buttons.add(saveExportButton);
         buttons.add(cancelButton);
+        buttons.add(backButton);
         this.add(Box.createVerticalStrut(20));
         this.add(buttons);
 
@@ -108,6 +113,11 @@ public class SaveExportView extends JPanel implements ActionListener, PropertyCh
         );
 
         cancelButton.addActionListener(this);
+        
+        backButton.addActionListener(e -> {
+            viewManagerModel.setState("logged in");
+            viewManagerModel.firePropertyChange();
+        });
 
         // Add document listeners for real-time state updates
         addProjectIdListener();
@@ -250,5 +260,6 @@ public class SaveExportView extends JPanel implements ActionListener, PropertyCh
         this.saveExportController = controller;
     }
 }
+
 
 
