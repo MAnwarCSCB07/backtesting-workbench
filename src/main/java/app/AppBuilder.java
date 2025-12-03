@@ -4,9 +4,7 @@ import data_access.FileExportGatewayImpl;
 import data_access.FileProjectRepository;
 import data_access.FileUserDataAccessObject;
 import entity.BacktestConfig;
-import entity.BacktestResult;
 import entity.Project;
-import entity.Universe;
 import entity.UserFactory;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.logged_in.ChangePasswordController;
@@ -102,7 +100,7 @@ public class AppBuilder {
     }
 
     public AppBuilder addChartsView() {
-        chartsView = new ChartsView();
+        chartsView = new ChartsView(viewManagerModel);
         cardPanel.add(chartsView, chartsView.viewName);
         return this;
     }
@@ -127,7 +125,7 @@ public class AppBuilder {
 
     public AppBuilder addSaveExportView() {
         saveExportViewModel = new SaveExportViewModel();
-        saveExportView = new SaveExportView(saveExportViewModel);
+        saveExportView = new SaveExportView(saveExportViewModel, viewManagerModel);
         cardPanel.add(saveExportView, saveExportView.getViewName());
         return this;
     }
@@ -213,34 +211,19 @@ public class AppBuilder {
      * This should be replaced when UC-2 and UC-3 are integrated.
      */
     private void createTestProject() {
-        // Create a sample universe
-        java.util.List<String> tickers = java.util.Arrays.asList("AAPL", "GOOGL", "MSFT", "AMZN", "TSLA");
-        Universe universe = new Universe(tickers);
-
-        // Create sample factor weights
-        java.util.Map<String, Double> factorWeights = new java.util.HashMap<>();
-        factorWeights.put("momentum", 0.4);
-        factorWeights.put("value", 0.3);
-        factorWeights.put("low_vol", 0.2);
-        factorWeights.put("quality", 0.1);
-        BacktestConfig config = new BacktestConfig("monthly", 10.0, 0.1, factorWeights);
-
-        // Create sample backtest results
-        java.util.Map<String, Double> metrics = new java.util.HashMap<>();
-        metrics.put("Sharpe Ratio", 1.52);
-        metrics.put("CAGR", 0.125);
-        metrics.put("Max Drawdown", -0.18);
-        metrics.put("Win Rate", 0.58);
-        java.util.List<Double> equityCurve = java.util.Arrays.asList(
-            100.0, 102.5, 105.0, 103.0, 108.0, 110.0, 107.0, 112.0, 115.0, 113.0
+        // Create sample backtest config using the actual constructor from main
+        java.time.LocalDate startDate = java.time.LocalDate.of(2023, 1, 1);
+        java.time.LocalDate endDate = java.time.LocalDate.of(2023, 12, 31);
+        BacktestConfig config = new BacktestConfig(
+            "demo-project-1",
+            startDate,
+            endDate,
+            100000.0,
+            "Demo Strategy"
         );
-        java.util.List<Double> drawdown = java.util.Arrays.asList(
-            0.0, -0.02, -0.05, -0.07, -0.10, -0.12, -0.15, -0.18, -0.15, -0.12
-        );
-        BacktestResult result = new BacktestResult(equityCurve, drawdown, metrics);
 
-        // Create and save the test project
-        Project testProject = new Project("demo-project-1", "Demo Backtest Project", universe, config, result);
+        // Create and save the test project using the actual constructor from main
+        Project testProject = new Project("demo-project-1", "Demo Backtest Project", config);
         projectRepository.save(testProject);
     }
 

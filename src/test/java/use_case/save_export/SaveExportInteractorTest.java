@@ -1,9 +1,7 @@
 package use_case.save_export;
 
 import entity.BacktestConfig;
-import entity.BacktestResult;
 import entity.Project;
-import entity.Universe;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -19,30 +17,25 @@ class SaveExportInteractorTest {
      * Creates a test project with all data populated.
      */
     private Project createTestProject() {
-        List<String> tickers = Arrays.asList("AAPL", "GOOGL", "MSFT");
-        Universe universe = new Universe(tickers);
+        // Create backtest config using the actual constructor from main
+        java.time.LocalDate startDate = java.time.LocalDate.of(2023, 1, 1);
+        java.time.LocalDate endDate = java.time.LocalDate.of(2023, 12, 31);
+        BacktestConfig config = new BacktestConfig(
+            "test-project-1",
+            startDate,
+            endDate,
+            100000.0,
+            "Test Strategy"
+        );
 
-        Map<String, Double> factorWeights = new HashMap<>();
-        factorWeights.put("momentum", 0.5);
-        factorWeights.put("value", 0.3);
-        factorWeights.put("low_vol", 0.2);
-        BacktestConfig config = new BacktestConfig("monthly", 10.0, 0.1, factorWeights);
-
-        Map<String, Double> metrics = new HashMap<>();
-        metrics.put("Sharpe Ratio", 1.5);
-        metrics.put("CAGR", 0.12);
-        metrics.put("Max Drawdown", -0.15);
-        List<Double> equityCurve = Arrays.asList(100.0, 105.0, 110.0, 108.0, 112.0);
-        List<Double> drawdown = Arrays.asList(0.0, -0.05, -0.10, -0.12, -0.15);
-        BacktestResult result = new BacktestResult(equityCurve, drawdown, metrics);
-
-        return new Project("test-project-1", "Test Project", universe, config, result);
+        // Create project using the actual constructor from main
+        return new Project("test-project-1", "Test Project", config);
     }
 
     @Test
     void testSuccessCSVExport() {
         Project testProject = createTestProject();
-        String projectId = testProject.getId();
+        String projectId = testProject.getProjectId();
 
         // Mock repository
         ProjectRepository mockRepository = new ProjectRepository() {
@@ -111,7 +104,7 @@ class SaveExportInteractorTest {
     @Test
     void testSuccessHTMLExport() {
         Project testProject = createTestProject();
-        String projectId = testProject.getId();
+        String projectId = testProject.getProjectId();
 
         ProjectRepository mockRepository = new ProjectRepository() {
             @Override
@@ -171,7 +164,7 @@ class SaveExportInteractorTest {
     @Test
     void testSuccessBOTHExport() {
         Project testProject = createTestProject();
-        String projectId = testProject.getId();
+        String projectId = testProject.getProjectId();
 
         ProjectRepository mockRepository = new ProjectRepository() {
             @Override
@@ -234,7 +227,7 @@ class SaveExportInteractorTest {
     @Test
     void testSuccessJSONExport() {
         Project testProject = createTestProject();
-        String projectId = testProject.getId();
+        String projectId = testProject.getProjectId();
 
         ProjectRepository mockRepository = new ProjectRepository() {
             @Override
@@ -354,7 +347,7 @@ class SaveExportInteractorTest {
     @Test
     void testFailureInvalidExportType() {
         Project testProject = createTestProject();
-        String projectId = testProject.getId();
+        String projectId = testProject.getProjectId();
 
         ProjectRepository mockRepository = new ProjectRepository() {
             @Override
@@ -473,7 +466,7 @@ class SaveExportInteractorTest {
     @Test
     void testFailureExportGatewayError() {
         Project testProject = createTestProject();
-        String projectId = testProject.getId();
+        String projectId = testProject.getProjectId();
 
         ProjectRepository mockRepository = new ProjectRepository() {
             @Override
@@ -532,7 +525,7 @@ class SaveExportInteractorTest {
     @Test
     void testSuccessWithCustomFilePath() {
         Project testProject = createTestProject();
-        String projectId = testProject.getId();
+        String projectId = testProject.getProjectId();
         String customPath = "/custom/path/to/export";
 
         ProjectRepository mockRepository = new ProjectRepository() {
@@ -594,7 +587,7 @@ class SaveExportInteractorTest {
     @Test
     void testCaseInsensitiveExportType() {
         Project testProject = createTestProject();
-        String projectId = testProject.getId();
+        String projectId = testProject.getProjectId();
 
         ProjectRepository mockRepository = new ProjectRepository() {
             @Override
@@ -649,5 +642,6 @@ class SaveExportInteractorTest {
         interactor.execute(inputData);
     }
 }
+
 
 
