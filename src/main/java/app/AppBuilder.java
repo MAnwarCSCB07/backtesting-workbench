@@ -37,6 +37,9 @@ import use_case.save_export.SaveExportOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
+
+import interface_adapter.import_ohlcv.ImportOHLCVViewModel;
+
 import view.*;
 
 import javax.swing.*;
@@ -73,6 +76,7 @@ public class AppBuilder {
     private ConfigureFactorsView configureFactorsView;
     private SaveExportView saveExportView;
     private SaveExportViewModel saveExportViewModel;
+    private ImportOHLCVViewModel importOHLCVViewModel;
 
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
@@ -112,10 +116,12 @@ public class AppBuilder {
     }
 
     public AppBuilder addInputStockDataView() {
-        inputStockDataView = new InputStockDataView(viewManagerModel);
-        cardPanel.add(inputStockDataView, inputStockDataView.viewName);
+        importOHLCVViewModel = new ImportOHLCVViewModel();
+        inputStockDataView = new InputStockDataView(importOHLCVViewModel, viewManagerModel);
+        cardPanel.add(inputStockDataView, inputStockDataView.getViewName());
         return this;
     }
+
 
     public AppBuilder addConfigureFactorsView() {
         configureFactorsView = new ConfigureFactorsView(viewManagerModel);
@@ -206,6 +212,9 @@ public class AppBuilder {
         return this;
     }
 
+    // Note: RunBacktest, ImportOHLCV, and FactorConfig use cases are from other team members
+    // These methods will be implemented when those use cases are merged
+
     /**
      * Creates a test project for demonstration purposes.
      * This should be replaced when UC-2 and UC-3 are integrated.
@@ -226,7 +235,6 @@ public class AppBuilder {
         Project testProject = new Project("demo-project-1", "Demo Backtest Project", config);
         projectRepository.save(testProject);
     }
-
     public JFrame build() {
         final JFrame application = new JFrame("User Login Example");
         application.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);

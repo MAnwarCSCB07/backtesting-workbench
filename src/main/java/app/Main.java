@@ -18,17 +18,12 @@ public class Main {
                 .addAlphaVantageView()
                 .addInputStockDataView()
                 .addConfigureFactorsView()
-                .addFactorResultsView()
                 .addChartsView()
-                .addRunBacktestView()
                 .addSaveExportView()
                 .addSignupUseCase()
                 .addLoginUseCase()
                 .addLogoutUseCase()
                 .addChangePasswordUseCase()
-                .addRunBacktestUseCase()
-                .addImportOHLCVUseCase()
-                .addFactorConfigUseCase()
                 .addSaveExportUseCase()
                 .build();
 

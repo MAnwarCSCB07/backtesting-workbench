@@ -7,8 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * File-based implementation of ProjectRepository.
- * Stores projects in memory (can be extended to persist to file later).
+ * In-memory implementation of ProjectRepository.
+ * Currently stores projects in memory using a HashMap.
+ * Can be extended to persist to file later if needed.
  */
 public class FileProjectRepository implements ProjectRepository {
     private final Map<String, Project> projects = new HashMap<>();
