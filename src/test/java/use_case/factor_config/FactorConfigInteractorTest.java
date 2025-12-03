@@ -291,6 +291,29 @@ public class FactorConfigInteractorTest {
         assertEquals(0.0, out.getRanked().get(0).composite);
     }
 
+    @Test
+    void winsorize_lowerClampBranchIsExecuted() throws Exception {
+        Method m = FactorConfigInteractor.class.getDeclaredMethod("winsorize", Map.class, double.class, double.class);
+        m.setAccessible(true);
+
+        Map<String, Double> vals = new HashMap<>();
+        vals.put("a", -100.0);
+        vals.put("b", 0.0);
+        vals.put("c", 100.0);
+
+        // With lowerProb=0.50 on 3 items, li=floor(0.5*(3-1))=1 => lo=0.0
+        // With upperProb=0.95, ui=floor(0.95*(3-1))=1 => hi=0.0
+        @SuppressWarnings("unchecked")
+        Map<String, Double> res = (Map<String, Double>) invoke(m, null, vals, 0.50, 0.95);
+
+        // Ensure lower clamp occurred: -100 -> 0 (clamped up to lo)
+        assertEquals(0.0, res.get("a"));
+        // Middle value stays within bounds (0 -> 0)
+        assertEquals(0.0, res.get("b"));
+        // Upper value also clamped down to hi (already covered elsewhere, but consistent here)
+        assertEquals(0.0, res.get("c"));
+    }
+
     // Reflection helper copied from the coverage test
     private static Object invoke(Method m, Object target, Object... args) throws Exception {
         try {
