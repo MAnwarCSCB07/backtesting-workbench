@@ -40,3 +40,6 @@ build/
 
 ### other files ###
 users.csv
+
+data/*
+backtest_results.txt

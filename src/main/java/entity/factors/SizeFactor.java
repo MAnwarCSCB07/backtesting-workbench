@@ -20,7 +20,7 @@ public class SizeFactor implements FactorCalculator {
     public Map<String, Double> compute(List<String> symbols, FactorDataGateway gateway) {
         Map<String, Double> out = new HashMap<>();
         for (String sym : symbols) {
-            double sz = gateway.size(sym);
+            double sz = gateway.getData(sym, FactorDataKeys.SIZE);
             if (sz > 0) {
                 out.put(sym, -Math.log(sz));
             } else {

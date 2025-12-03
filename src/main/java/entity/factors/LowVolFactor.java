@@ -19,7 +19,7 @@ public class LowVolFactor implements FactorCalculator {
     public Map<String, Double> compute(List<String> symbols, FactorDataGateway gateway) {
         Map<String, Double> out = new HashMap<>();
         for (String sym : symbols) {
-            out.put(sym, -gateway.volatility(sym)); // invert so higher is better
+            out.put(sym, -gateway.getData(sym, FactorDataKeys.VOLATILITY)); // invert so higher is better
         }
         return out;
     }
